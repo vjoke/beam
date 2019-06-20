@@ -224,6 +224,11 @@ struct WalletModelBridge : public Bridge<IWalletModelAsync>
 
 namespace beam::wallet
 {
+    bool WalletClient::isFork1(Height height)
+    {
+        return height >= Rules::get().pForks[1].m_Height;
+    }
+
     WalletClient::WalletClient(IWalletDB::Ptr walletDB, const std::string& nodeAddr, io::Reactor::Ptr reactor)
         : m_walletDB(walletDB)
         , m_reactor{ reactor ? reactor : io::Reactor::create() }
@@ -407,11 +412,6 @@ namespace beam::wallet
     bool WalletClient::isRunning() const
     {
         return m_isRunning;
-    }
-
-    bool WalletClient::isFork1() const
-    {
-        return m_walletDB->getCurrentHeight() >= Rules::get().pForks[1].m_Height;
     }
 
     void WalletClient::onCoinsChanged()

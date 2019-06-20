@@ -468,37 +468,37 @@ void WalletViewModel::onStatus(const beam::wallet::WalletStatus& status)
     if (_status.available != status.available)
     {
         _status.available = status.available;
-
         changed = true;
-
         emit actualAvailableChanged();
     }
 
     if (_status.receiving != status.receiving)
     {
         _status.receiving = status.receiving;
-
         changed = true;
     }
 
     if (_status.sending != status.sending)
     {
         _status.sending = status.sending;
-
         changed = true;
     }
 
     if (_status.maturing != status.maturing)
     {
         _status.maturing = status.maturing;
-
         changed = true;
     }
 
     if (_status.update.lastTime != status.update.lastTime)
     {
         _status.update.lastTime = status.update.lastTime;
+        changed = true;
+    }
 
+    if (_status.stateID != status.stateID)
+    {
+        _status.stateID = status.stateID;
         changed = true;
     }
 
@@ -769,12 +769,12 @@ QString WalletViewModel::getStatusRole() const
 
 int WalletViewModel::getDefaultFeeInGroth() const
 {
-    return _model.isFork1() ? kFeeInGroth_Fork1 : kDefaultFeeInGroth;
+    return WalletClient::isFork1(_status.stateID.m_Height) ? kFeeInGroth_Fork1 : kDefaultFeeInGroth;
 }
 
 int WalletViewModel::getMinFeeInGroth() const
 {
-    return _model.isFork1() ? kFeeInGroth_Fork1 : 0;
+    return WalletClient::isFork1(_status.stateID.m_Height) ? kFeeInGroth_Fork1 : 0;
 }
 
 void WalletViewModel::setExpires(int value)

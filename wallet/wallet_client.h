@@ -47,6 +47,9 @@ namespace beam::wallet
         , private IWalletModelAsync
     {
     public:
+        static bool isFork1(Height height);
+
+    public:
         WalletClient(IWalletDB::Ptr walletDB, const std::string& nodeAddr, io::Reactor::Ptr reactor);
         virtual ~WalletClient();
 
@@ -56,10 +59,8 @@ namespace beam::wallet
         std::string getNodeAddress() const;
         std::string exportOwnerKey(const beam::SecString& pass) const;
         bool isRunning() const;
-        bool isFork1() const;
 
     protected:
-
         virtual void onStatus(const WalletStatus& status) = 0;
         virtual void onTxStatus(ChangeAction, const std::vector<TxDescription>& items) = 0;
         virtual void onSyncProgressUpdated(int done, int total) = 0;
@@ -79,7 +80,6 @@ namespace beam::wallet
         virtual void onAddressChecked(const std::string& addr, bool isValid) = 0;
 
     private:
-
         void onCoinsChanged() override;
         void onTransactionChanged(ChangeAction action, std::vector<TxDescription>&& items) override;
         void onSystemStateChanged() override;
@@ -124,9 +124,7 @@ namespace beam::wallet
         std::weak_ptr<Wallet> m_wallet;
         bool m_isConnected;
         boost::optional<ErrorType> m_walletError;
-
         std::string m_nodeAddrStr;
-
         std::atomic<bool> m_isRunning;
     };
 }
