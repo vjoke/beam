@@ -174,7 +174,7 @@ namespace beam::wallet
             for (const auto& kidv : ids)
             {
                 auto& output = outputs.emplace_back(std::make_unique<Output>());
-                output->m_Commitment = m_hwWallet.generateKeySync(kidv, false);
+                output->m_Commitment = m_hwWallet.generateKeySync(kidv, true);
 
                 output->m_pConfidential.reset(new ECC::RangeProof::Confidential);
                 *output->m_pConfidential = m_hwWallet.generateRangeProofSync(kidv, false);
