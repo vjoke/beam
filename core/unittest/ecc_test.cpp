@@ -111,16 +111,20 @@ inline void hex2bin(const char *hex_string, const size_t size_string, uint8_t *o
   uint32_t buffer = 0;
   for (size_t i = 0; i < size_string / 2; i++)
   {
+#ifdef WIN32
+    sscanf_s(hex_string + 2 * i, "%2X", &buffer);
+#else
     sscanf(hex_string + 2 * i, "%2X", &buffer);
-    out_bytes[i] = buffer;
+#endif
+    out_bytes[i] = (uint8_t)buffer;
   }
 }
 
 int IS_EQUAL_HEX(const char *hex_str, const uint8_t *bytes, size_t str_size)
 {
-  uint8_t tmp[str_size / 2];
-  hex2bin(hex_str, str_size, tmp);
-  return memcmp(tmp, bytes, str_size / 2) == 0;
+  std::vector<uint8_t> tmp(str_size / 2);
+  hex2bin(hex_str, str_size, &tmp[0]);
+  return memcmp(&tmp[0], bytes, str_size / 2) == 0;
 }
 
 namespace ECC {
@@ -2182,7 +2186,7 @@ void TestTransactionHWSingular()
 
 #if TREZOR_DEBUG == 1
     printf("Kernel params for TX sign:\n\tFee: %ld\n\tMin_height: %ld; Max_height: %ld\n\tAsset_emission: %ld\n",
-           mw1.m_Kernel.m_Fee, mw1.m_Kernel.m_Height.m_Min, mw1.m_Kernel.m_Height.m_Max, mw1.m_Kernel.m_AssetEmission);
+           (long)mw1.m_Kernel.m_Fee, (long)mw1.m_Kernel.m_Height.m_Min, (long)mw1.m_Kernel.m_Height.m_Max, (long)mw1.m_Kernel.m_AssetEmission);
     char point_str[64];
     mw1.m_Kernel.m_Signature.m_NoncePub.m_X.Print(point_str);
     printf("\tNonce pub x: %s\n", point_str);
