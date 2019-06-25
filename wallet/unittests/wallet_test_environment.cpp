@@ -106,8 +106,8 @@ public:
     void subscribe(IWalletDbObserver* observer) override {}
     void unsubscribe(IWalletDbObserver* observer) override {}
 
-    std::vector<TxDescription> getTxHistory(wallet::TxType, uint64_t, int) override { return {}; };
-    boost::optional<TxDescription> getTx(const TxID&) override { return boost::optional<TxDescription>{}; };
+    std::vector<TxDescription> getTxHistory(wallet::TxType, uint64_t, int) const override { return {}; };
+    boost::optional<TxDescription> getTx(const TxID&) const override { return boost::optional<TxDescription>{}; };
     void saveTx(const TxDescription& p) override
     {
         setTxParameter(p.m_txId, wallet::kDefaultSubTxID, wallet::TxParameterID::Amount, toByteBuffer(p.m_amount), false);
@@ -134,7 +134,6 @@ public:
         m_LastAdddr = wa;
     }
 
-    void setExpirationForAllAddresses(uint64_t expiration) override {};
     boost::optional<WalletAddress> getAddress(const WalletID& id) const override
     {
         if (id == m_LastAdddr.m_walletID)
@@ -236,11 +235,11 @@ IWalletDB::Ptr createSqliteWalletDB(const string& path, bool separateDBForPrivat
     return walletDB;
 }
 
-IWalletDB::Ptr createSenderWalletDB(bool separateDBForPrivateData = false)
+IWalletDB::Ptr createSenderWalletDB(bool separateDBForPrivateData = false, AmountList amounts = {5, 2, 1, 9})
 {
     auto db = createSqliteWalletDB(SenderWalletDB, separateDBForPrivateData);
     db->AllocateKidRange(100500); // make sure it'll get the address different from the receiver
-    for (auto amount : { 5, 2, 1, 9 })
+    for (auto amount : amounts)
     {
         Coin coin = CreateAvailCoin(amount, 0);
         db->store(coin);
@@ -342,14 +341,16 @@ private:
 
 struct TestWalletRig
 {
-    TestWalletRig(const string& name, IWalletDB::Ptr walletDB, Wallet::TxCompletedAction&& action = Wallet::TxCompletedAction(), bool coldWallet = false, bool oneTimeBbsEndpoint = false, uint32_t nodePollPeriod_ms = 0)
+    enum Type
+    {
+        Regular,
+        ColdWallet,
+        Offline
+    };
+    TestWalletRig(const string& name, IWalletDB::Ptr walletDB, Wallet::TxCompletedAction&& action = Wallet::TxCompletedAction(), Type type = Type::Regular, bool oneTimeBbsEndpoint = false, uint32_t nodePollPeriod_ms = 0)
         : m_WalletDB{ walletDB }
-#if defined(BEAM_HW_WALLET)
-        , m_KeyKeeper{ make_shared<wallet::TrezorKeyKeeper>() }
-#else
         , m_KeyKeeper{ make_shared<wallet::LocalPrivateKeyKeeper>(walletDB) }
-#endif
-        , m_Wallet{ m_WalletDB, move(action), coldWallet ? []() {io::Reactor::get_Current().stop(); } : Wallet::UpdateCompletedAction() }
+        , m_Wallet{ m_WalletDB, move(action),( type == Type::ColdWallet) ? []() {io::Reactor::get_Current().stop(); } : Wallet::UpdateCompletedAction() }
     {
         if (m_WalletDB->get_MasterKdf()) // can create secrets
         {
@@ -363,25 +364,33 @@ struct TestWalletRig
             m_WalletID = addresses[0].m_walletID;
         }
 
-        if (coldWallet)
+        switch (type)
         {
-            m_Wallet.AddMessageEndpoint(make_shared<ColdWalletMessageEndpoint>(m_Wallet, m_WalletDB));
-        }
-        else
-        {
-            auto nodeEndpoint = make_shared<proto::FlyClient::NetworkStd>(m_Wallet);
-            nodeEndpoint->m_Cfg.m_PollPeriod_ms = nodePollPeriod_ms;
-            nodeEndpoint->m_Cfg.m_vNodes.push_back(io::Address::localhost().port(32125));
-            nodeEndpoint->Connect();
-            if (oneTimeBbsEndpoint)
+        case Type::ColdWallet:
             {
-                m_Wallet.AddMessageEndpoint(make_shared<OneTimeBbsEndpoint>(m_Wallet, nodeEndpoint, m_WalletDB));
+                m_Wallet.AddMessageEndpoint(make_shared<ColdWalletMessageEndpoint>(m_Wallet, m_WalletDB));
+                break;
             }
-            else
+
+        case Type::Regular:
             {
-                m_Wallet.AddMessageEndpoint(make_shared<WalletNetworkViaBbs>(m_Wallet, nodeEndpoint, m_WalletDB));
+                auto nodeEndpoint = make_shared<proto::FlyClient::NetworkStd>(m_Wallet);
+                nodeEndpoint->m_Cfg.m_PollPeriod_ms = nodePollPeriod_ms;
+                nodeEndpoint->m_Cfg.m_vNodes.push_back(io::Address::localhost().port(32125));
+                nodeEndpoint->Connect();
+                if (oneTimeBbsEndpoint)
+                {
+                    m_Wallet.AddMessageEndpoint(make_shared<OneTimeBbsEndpoint>(m_Wallet, nodeEndpoint, m_WalletDB));
+                }
+                else
+                {
+                    m_Wallet.AddMessageEndpoint(make_shared<WalletNetworkViaBbs>(m_Wallet, nodeEndpoint, m_WalletDB));
+                }
+                m_Wallet.SetNodeEndpoint(nodeEndpoint);
+                break;
             }
-            m_Wallet.SetNodeEndpoint(nodeEndpoint);
+        case Type::Offline:
+            break;
         }
     }
 
@@ -810,7 +819,9 @@ struct TestNodeNetwork
 class TestNode
 {
 public:
-    TestNode()
+    using NewBlockFunc = std::function<void(Height)>;
+    TestNode(NewBlockFunc func = NewBlockFunc())
+        : m_NewBlockFunc(func)
     {
         m_Server.Listen(io::Address::localhost().port(32125));
         while (m_Blockchain.m_mcm.m_vStates.size() < 145)
@@ -838,6 +849,11 @@ public:
             Client& c = *it;
             if (c.IsSecureOut())
                 c.SendTip();
+        }
+
+        if (m_NewBlockFunc)
+        {
+            m_NewBlockFunc(m_Blockchain.m_mcm.m_vStates.back().m_Hdr.m_Height);
         }
     }
 private:
@@ -979,6 +995,7 @@ private:
     ClientList m_lstClients;
 
     std::vector<proto::BbsMsg> m_bbs;
+    NewBlockFunc m_NewBlockFunc;
 
     void DeleteClient(Client* client)
     {

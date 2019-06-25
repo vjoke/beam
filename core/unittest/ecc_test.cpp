@@ -609,21 +609,26 @@ void TestCommitments()
 	SetRandom(seed);
 	kdf.Generate(seed);
 
-	Key::IDV kidv(100500, 15, Key::Type::Regular, 7);
+	for (uint8_t iCycle = 0; iCycle < 2; iCycle++)
+	{
+		uint8_t nScheme = iCycle ? Key::IDV::Scheme::V1 : Key::IDV::Scheme::V0;
 
-	Scalar::Native sk;
-	ECC::Point::Native comm;
-	beam::SwitchCommitment().Create(sk, comm, kdf, kidv);
+		Key::IDV kidv(100500, 15, Key::Type::Regular, 7, nScheme);
 
-	sigma = Commitment(sk, kidv.m_Value);
-	sigma = -sigma;
-	sigma += comm;
-	verify_test(sigma == Zero);
+		Scalar::Native sk;
+		ECC::Point::Native comm;
+		beam::SwitchCommitment().Create(sk, comm, kdf, kidv);
 
-	beam::SwitchCommitment().Recover(sigma, kdf, kidv);
-	sigma = -sigma;
-	sigma += comm;
-	verify_test(sigma == Zero);
+		sigma = Commitment(sk, kidv.m_Value);
+		sigma = -sigma;
+		sigma += comm;
+		verify_test(sigma == Zero);
+
+		beam::SwitchCommitment().Recover(sigma, kdf, kidv);
+		sigma = -sigma;
+		sigma += comm;
+		verify_test(sigma == Zero);
+	}
 }
 
 template <typename T>
@@ -651,6 +656,7 @@ void TestRangeProof(bool bCustomTag)
 	SetRandomOrd(cp.m_Kidv.m_Idx);
 	SetRandomOrd(cp.m_Kidv.m_Type);
 	SetRandomOrd(cp.m_Kidv.m_SubIdx);
+	cp.m_Kidv.set_Subkey(cp.m_Kidv.m_SubIdx);
 	SetRandom(cp.m_Seed.V);
 	cp.m_Kidv.m_Value = 345000;
 
@@ -915,6 +921,7 @@ void TestMultiSigOutput()
     creatorParamsB.m_Kidv.m_Type = Key::Type::Regular;
     creatorParamsB.m_Kidv.m_Value = amount;
     SetRandomOrd(creatorParamsB.m_Kidv.m_SubIdx);
+	creatorParamsB.m_Kidv.set_Subkey(creatorParamsB.m_Kidv.m_SubIdx);
 
     // multi-signed bulletproof
     // blindingFactor = sk + sk1
@@ -1004,7 +1011,7 @@ void TestMultiSigOutput()
     Key::IDV kidv;
     SetRandomOrd(kidv.m_Idx);
     kidv.m_Type = Key::Type::Regular;
-    kidv.m_SubIdx = 0;
+	kidv.set_Subkey(0);
     kidv.m_Value = amount;
     Scalar::Native k;
     beam::SwitchCommitment(nullptr).Create(k, pInput->m_Commitment, *pKdf_A, kidv);
@@ -1131,7 +1138,7 @@ struct TransactionMaker
 			Key::IDV kidv;
 			SetRandomOrd(kidv.m_Idx, is_trezor_debug);
 			kidv.m_Type = Key::Type::Regular;
-			kidv.m_SubIdx = 0;
+			kidv.set_Subkey(0);
 			kidv.m_Value = val;
 
 			Scalar::Native k;
@@ -1150,7 +1157,7 @@ struct TransactionMaker
 			Key::IDV kidv;
 			SetRandomOrd(kidv.m_Idx, is_trezor_debug);
 			kidv.m_Type = Key::Type::Regular;
-			kidv.m_SubIdx = 0;
+			kidv.set_Subkey(0);
 			kidv.m_Value = val;
 
 			if (pAssetID)

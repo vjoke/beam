@@ -23,8 +23,10 @@ using json = nlohmann::json;
 namespace
 {
     constexpr uint32_t kBTCLockTimeSec = 2 * 24 * 60 * 60;
-    constexpr uint32_t kBTCWithdrawTxAverageSize = 240;
+    constexpr uint32_t kBTCWithdrawTxAverageSize = 360;
     constexpr uint32_t kBTCMaxHeightDifference = 10;
+    // it's average value
+    constexpr uint32_t kBtcTxTimeInBeamBlocks = 70;
 
     libbitcoin::chain::script AtomicSwapContract(const libbitcoin::ec_compressed& publicKeyA
         , const libbitcoin::ec_compressed& publicKeyB
@@ -186,6 +188,33 @@ namespace beam::wallet
         return height >= lockHeight;
     }
 
+    bool BitcoinSide::HasEnoughTimeToProcessLockTx()
+    {
+        Height lockTxMaxHeight = MaxHeight;
+        if (m_tx.GetParameter(TxParameterID::MaxHeight, lockTxMaxHeight, SubTxIndex::BEAM_LOCK_TX))
+        {
+            Block::SystemState::Full systemState;
+            if (m_tx.GetTip(systemState) && systemState.m_Height > lockTxMaxHeight - GetTxTimeInBeamBlocks())
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    uint32_t BitcoinSide::GetTxTimeInBeamBlocks() const
+    {
+        // it's average value
+        return 70;
+    }
+
+    bool BitcoinSide::CheckAmount(Amount amount, Amount feeRate)
+    {
+        constexpr Amount kDustThreshold = 546;
+        Amount fee = static_cast<Amount>(std::round(double(kBTCWithdrawTxAverageSize * feeRate) / 1000));
+        return amount > kDustThreshold && amount > fee;
+    }
+
     bool BitcoinSide::LoadSwapAddress()
     {
         // load or generate BTC address
@@ -297,7 +326,8 @@ namespace beam::wallet
             Amount swapAmount = m_tx.GetMandatoryParameter<Amount>(TxParameterID::AtomicSwapAmount);
 
             libbitcoin::chain::transaction contractTx;
-            libbitcoin::chain::output output(swapAmount, contractScript);
+            libbitcoin::chain::script outputScript = libbitcoin::chain::script::to_pay_script_hash_pattern(libbitcoin::bitcoin_short_hash(contractScript.to_data(false)));
+            libbitcoin::chain::output output(swapAmount, outputScript);
             contractTx.outputs().push_back(output);
 
             std::string hexTx = libbitcoin::encode_base16(contractTx.to_data());
@@ -390,14 +420,11 @@ namespace beam::wallet
 
     bool BitcoinSide::SendWithdrawTx(SubTxID subTxID)
     {
-        if (uint8_t nRegistered = proto::TxStatus::Unspecified; !m_tx.GetParameter(TxParameterID::TransactionRegistered, nRegistered, subTxID)) // TODO
-        {
-            auto refundTxState = BuildWithdrawTx(subTxID);
-            if (refundTxState != SwapTxState::Constructed)
-                return false;
+        auto refundTxState = BuildWithdrawTx(subTxID);
+        if (refundTxState != SwapTxState::Constructed)
+            return false;
 
-            assert(m_SwapWithdrawRawTx.is_initialized());
-        }
+         assert(m_SwapWithdrawRawTx.is_initialized());
 
         if (!RegisterTx(*m_SwapWithdrawRawTx, subTxID))
             return false;
@@ -438,6 +465,7 @@ namespace beam::wallet
         LOG_ERROR() << m_tx.GetTxID() << "[" << static_cast<SubTxID>(subTxID) << "]" << " Bridge internal error: type = " << error.m_type << "; message = " << error.m_message;
         switch (error.m_type)
         {
+        case IBitcoinBridge::EmptyResult:
         case IBitcoinBridge::InvalidResultFormat:
             m_tx.SetParameter(TxParameterID::InternalFailureReason, TxFailureReason::SwapFormatResponseError, false, subTxID);
             break;
@@ -584,12 +612,14 @@ namespace beam::wallet
                 libbitcoin::endorsement secretSig;
                 libbitcoin::chain::script::create_endorsement(secretSig, secret, contractScript, withdrawTX, input_index, libbitcoin::machine::sighash_algorithm::all);
 
-                // 0 <their sig> <secret sig> 1
+               // 0 <their sig> <secret sig> 1
                 sig_script.push_back(libbitcoin::machine::operation(libbitcoin::machine::opcode(0)));
                 sig_script.push_back(libbitcoin::machine::operation(sig));
                 sig_script.push_back(libbitcoin::machine::operation(secretSig));
                 sig_script.push_back(libbitcoin::machine::operation(libbitcoin::machine::opcode::push_positive_1));
             }
+
+            sig_script.push_back(libbitcoin::machine::operation(contractScript.to_data(false)));
 
             libbitcoin::chain::script input_script(sig_script);
 
@@ -653,10 +683,11 @@ namespace beam::wallet
             auto script = libbitcoin::chain::script::factory_from_data(scriptData, false);
 
             auto contractScript = CreateAtomicSwapContract();
+            auto inputScript = libbitcoin::chain::script::to_pay_script_hash_pattern(libbitcoin::bitcoin_short_hash(contractScript.to_data(false)));
 
-            assert(script == contractScript);
+            assert(script == inputScript);
 
-            if (script != contractScript)
+            if (script != inputScript)
             {
                 m_tx.SetParameter(TxParameterID::InternalFailureReason, TxFailureReason::SwapInvalidContract, false, SubTxIndex::LOCK_TX);
                 m_tx.UpdateAsync();

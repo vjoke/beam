@@ -133,6 +133,13 @@ struct Node
 
 		} m_Dandelion;
 
+		struct Recovery
+		{
+			std::string m_sPathOutput; // directory with (back)slash and optionally a common prefix
+			uint32_t m_Granularity = 30; // block interval for newer recovery generation
+
+		} m_Recovery;
+
 		NodeProcessor::StartParams m_ProcessorParams;
 
 		IObserver* m_Observer = nullptr;
@@ -193,6 +200,7 @@ private:
 		bool EnumViewerKeys(IKeyWalker&) override;
 		void OnUtxoEvent(const UtxoEvent::Value&) override;
 		void OnDummy(const Key::ID&, Height) override;
+		void Stop();
 
 		struct TaskProcessor
 			:public Task::Processor
@@ -294,6 +302,7 @@ private:
 	void InitKeys();
 	void InitIDs();
 	void RefreshOwnedUtxos();
+	void MaybeGenerateRecovery();
 
 	struct Wanted
 	{

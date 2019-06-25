@@ -570,7 +570,7 @@ void TestAddresses()
     WALLET_CHECK(addresses[0].m_duration == a.m_duration);
     WALLET_CHECK(addresses[0].m_OwnID == a.m_OwnID);
 
-    auto exported = storage::ExportAddressesToJson(*db);
+    auto exported = storage::ExportDataToJson(*db);
     WALLET_CHECK(!exported.empty());
  
     auto a2 = db->getAddress(a.m_walletID);
@@ -582,11 +582,87 @@ void TestAddresses()
     a2 = db->getAddress(a.m_walletID);
     WALLET_CHECK(!a2.is_initialized());
 
-    WALLET_CHECK(storage::ImportAddressesFromJson(*db, &exported[0], exported.size()));
+    WALLET_CHECK(storage::ImportDataFromJson(*db, &exported[0], exported.size()));
     {
         auto a3 = db->getAddress(a.m_walletID);
         WALLET_CHECK(a3.is_initialized());
+        addresses = db->getAddresses(true);
     }
+
+    // check double import
+    WALLET_CHECK(storage::ImportDataFromJson(*db, &exported[0], exported.size()));
+    {
+        auto a3 = db->getAddress(a.m_walletID);
+        WALLET_CHECK(a3.is_initialized());
+        WALLET_CHECK(addresses == db->getAddresses(true));
+    }
+}
+
+void TestExportImportTx()
+{
+    cout << "\nWallet database transactions export/import test\n";
+    auto walletDB = createSqliteWalletDB();
+
+    WalletAddress wa;
+    wa.m_OwnID = (*walletDB).AllocateKidRange(1);
+    wa.m_walletID = storage::generateWalletIDFromIndex(*walletDB, wa.m_OwnID);
+    TxDescription tr;
+    tr.m_txId = {{4, 5, 6, 7, 65}};
+    tr.m_amount = 52;
+    tr.m_createTime = 45613;
+    tr.m_minHeight = 185;
+    tr.m_sender = false;
+    tr.m_status = TxStatus::Pending;
+    tr.m_change = 8;
+    tr.m_myId = wa.m_walletID;
+    walletDB->saveTx(tr);
+    storage::setTxParameter(
+        *walletDB,
+        tr.m_txId,
+        1,
+        TxParameterID::MyAddressID,
+        wa.m_OwnID,
+        false);
+
+    WalletAddress wa2;
+    wa2.m_OwnID = (*walletDB).AllocateKidRange(1);
+    wa2.m_walletID = storage::generateWalletIDFromIndex(*walletDB, wa2.m_OwnID);
+    TxDescription tr2;
+    tr2.m_txId = {{7, 8, 9, 13}};
+    tr2.m_amount = 71;
+    tr2.m_minHeight = 285;
+    tr2.m_createTime = 4628;
+    tr2.m_modifyTime = 45285;
+    tr2.m_status = TxStatus::Cancelled;
+    tr2.m_change = 8;
+    tr2.m_myId = wa2.m_walletID;
+    walletDB->saveTx(tr2); // without MyAddressID
+
+
+    auto exported = storage::ExportDataToJson(*walletDB);
+    walletDB->deleteTx(tr.m_txId);
+    WALLET_CHECK(walletDB->getTxHistory().size() == 1);
+    WALLET_CHECK(storage::ImportDataFromJson(*walletDB, &exported[0], exported.size()));
+    auto _tr = walletDB->getTx(tr.m_txId);
+    WALLET_CHECK(_tr.is_initialized());
+    WALLET_CHECK(_tr.value().m_createTime == tr.m_createTime);
+    WALLET_CHECK(_tr.value().m_minHeight == tr.m_minHeight);
+    WALLET_CHECK(walletDB->getTxHistory().size() == 2);
+
+    storage::setTxParameter(
+        *walletDB,
+        tr2.m_txId,
+        1,
+        TxParameterID::MyAddressID,
+        (*walletDB).AllocateKidRange(1),
+        false);
+    exported = storage::ExportDataToJson(*walletDB);
+    walletDB->deleteTx(tr2.m_txId);
+    WALLET_CHECK(walletDB->getTxHistory().size() == 1);
+    WALLET_CHECK(storage::ImportDataFromJson(*walletDB, &exported[0], exported.size()));
+    WALLET_CHECK(walletDB->getTxHistory().size() == 1);
+    _tr = walletDB->getTx(tr2.m_txId);
+    WALLET_CHECK(!_tr.is_initialized());
 }
 
 vector<Coin::ID> ExtractIDs(const vector<Coin>& src)
@@ -1113,6 +1189,7 @@ int main()
     TestSelect5();
     TestSelect6();
     TestAddresses();
+    TestExportImportTx();
     TestTxParameters();
     TestWalletMessages();
 

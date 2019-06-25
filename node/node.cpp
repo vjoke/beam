@@ -646,6 +646,54 @@ void Node::Processor::OnNewState()
 	IObserver* pObserver = get_ParentObj().m_Cfg.m_Observer;
 	if (pObserver)
 		pObserver->OnStateChanged();
+
+	get_ParentObj().MaybeGenerateRecovery();
+}
+
+void Node::MaybeGenerateRecovery()
+{
+	if (!m_PostStartSynced || m_Cfg.m_Recovery.m_sPathOutput.empty() || !m_Cfg.m_Recovery.m_Granularity)
+		return;
+
+	Height h0 = m_Processor.get_DB().ParamIntGetDef(NodeDB::ParamID::LastRecoveryHeight);
+	const Height& h1 = m_Processor.m_Cursor.m_ID.m_Height; // alias
+	if (h1 < h0 + m_Cfg.m_Recovery.m_Granularity)
+		return;
+
+	LOG_INFO() << "Generating recovery...";
+
+	std::ostringstream os;
+	os
+		<< m_Cfg.m_Recovery.m_sPathOutput
+		<< m_Processor.m_Cursor.m_ID;
+
+	std::string sPath = os.str();
+
+	std::string sTmp = sPath;
+	sTmp += ".tmp";
+
+	bool bOk = GenerateRecoveryInfo(sTmp.c_str());
+	if (bOk)
+	{
+#ifdef WIN32
+		bOk =
+			MoveFileExW(Utf8toUtf16(sTmp.c_str()).c_str(), Utf8toUtf16(sPath.c_str()).c_str(), MOVEFILE_REPLACE_EXISTING) ||
+			(GetLastError() == ERROR_FILE_NOT_FOUND);
+#else // WIN32
+		bOk =
+			!rename(sTmp.c_str(), sPath.c_str()) ||
+			(ENOENT == errno);
+#endif // WIN32
+	}
+
+	if (bOk) {
+		LOG_INFO() << "Recovery generation done";
+		m_Processor.get_DB().ParamSet(NodeDB::ParamID::LastRecoveryHeight, &h1, nullptr);
+	} else
+	{
+		LOG_INFO() << "Recovery generation failed";
+		beam::DeleteFile(sTmp.c_str());
+	}
 }
 
 void Node::Processor::OnRolledBack()
@@ -852,6 +900,23 @@ void Node::Processor::OnGoUpTimer()
 	TryGoUp();
 	get_ParentObj().RefreshCongestions();
 	get_ParentObj().UpdateSyncStatus();
+}
+
+void Node::Processor::Stop()
+{
+    m_TaskProcessor.Stop();
+    m_bGoUpPending = false;
+    m_bFlushPending = false;
+
+    if (m_pGoUpTimer)
+    {
+        m_pGoUpTimer->cancel();
+    }
+
+    if (m_pFlushTimer)
+    {
+        m_pFlushTimer->cancel();
+    }
 }
 
 bool Node::Processor::EnumViewerKeys(IKeyWalker& w)
@@ -1137,7 +1202,7 @@ Node::~Node()
 
     assert(m_setTasks.empty());
 
-	m_Processor.m_TaskProcessor.Stop();
+	m_Processor.Stop();
 
 	if (!std::uncaught_exceptions())
 		m_PeerMan.OnFlush();
@@ -2291,14 +2356,14 @@ void Node::AddDummyInputs(Transaction& tx)
 		Key::IKdf::Ptr pChild;
 		Key::IKdf* pKdf = nullptr;
 
-		if (kidv.m_SubIdx == m_Keys.m_nMinerSubIndex)
+		if (kidv.get_Subkey() == m_Keys.m_nMinerSubIndex)
 			pKdf = m_Keys.m_pMiner.get();
 		else
 		{
 			// was created by other miner. If we have the root key - we can recreate its key
 			if (!m_Keys.m_nMinerSubIndex)
 			{
-				ECC::HKdf::CreateChild(pChild, *m_Keys.m_pMiner, kidv.m_SubIdx);
+				ECC::HKdf::CreateChild(pChild, *m_Keys.m_pMiner, kidv.get_Subkey());
 				pKdf = pChild.get();
 			}
 		}
@@ -2375,7 +2440,7 @@ void Node::AddDummyOutputs(Transaction& tx)
     {
 		Key::IDV kidv(Zero);
 		kidv.m_Type = Key::Type::Decoy;
-		kidv.m_SubIdx = m_Keys.m_nMinerSubIndex;
+		kidv.set_Subkey(m_Keys.m_nMinerSubIndex);
 
 		while (true)
 		{
@@ -3607,9 +3672,10 @@ IExternalPOW::BlockFoundResult Node::Miner::OnMinedExternal()
 {
 	std::string jobID_;
 	Block::PoW POW;
+	Height h;
 
 	assert(m_External.m_pSolver);
-	m_External.m_pSolver->get_last_found_block(jobID_, POW);
+	m_External.m_pSolver->get_last_found_block(jobID_, h, POW);
 
 	char* szEnd = nullptr;
 	uint64_t jobID = strtoul(jobID_.c_str(), &szEnd, 10);
@@ -4020,7 +4086,7 @@ bool Node::GenerateRecoveryInfo(const char* szPath)
 	}
 	catch (const std::exception& ex)
 	{
-		LOG_DEBUG() << ex.what();
+		LOG_ERROR() << ex.what();
 		return false;
 	}
 

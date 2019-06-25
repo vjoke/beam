@@ -28,6 +28,8 @@
 #include "bitcoin/bitcoin_side.h"
 #include "litecoin/litecoind016.h"
 #include "litecoin/litecoin_side.h"
+#include "qtum/qtumd017.h"
+#include "qtum/qtum_side.h"
 
 namespace beam::wallet
 {
@@ -101,17 +103,18 @@ namespace beam::wallet
 
     Wallet::Wallet(IWalletDB::Ptr walletDB, TxCompletedAction&& action, UpdateCompletedAction&& updateCompleted)
         : m_WalletDB{ walletDB }
-#if defined(BEAM_HW_WALLET)
-        , m_KeyKeeper{ make_shared<wallet::TrezorKeyKeeper>() }
-#else
         , m_KeyKeeper{ walletDB->get_MasterKdf() ? make_shared<LocalPrivateKeyKeeper>(walletDB): IPrivateKeyKeeper::Ptr() }
-#endif
         , m_TxCompletedAction{move(action)}
         , m_UpdateCompleted{move(updateCompleted)}
         , m_LastSyncTotal(0)
         , m_OwnedNodesOnline(0)
     {
         assert(walletDB);
+        // the only default type of transaction
+        RegisterTransactionType(TxType::Simple, wallet::SimpleTransaction::Create);
+
+        // Temporary
+        RegisterTransactionType(TxType::AtomicSwap, wallet::AtomicSwapTransaction::Create);
         ResumeAllTransactions();
     }
 
@@ -169,6 +172,11 @@ namespace beam::wallet
     void Wallet::initLitecoin(io::Reactor& reactor, const LitecoinOptions& options)
     {
         m_litecoinBridge = make_shared<Litecoind016>(reactor, options);
+    }
+    
+    void Wallet::initQtum(io::Reactor& reactor, const QtumOptions& options)
+    {
+        m_qtumBridge = make_shared<Qtumd017>(reactor, options);
     }
 
     void Wallet::initSwapConditions(Amount beamAmount, Amount swapAmount, AtomicSwapCoin swapCoin, bool isBeamSide)
@@ -253,10 +261,7 @@ namespace beam::wallet
         txDescription.m_selfTx = (receiverAddr && receiverAddr->m_OwnID);
         m_WalletDB->saveTx(txDescription);
 
-        m_ActiveTransactions.emplace(txID, tx);
-
-        updateTransaction(txID);
-
+        ProcessTransaction(tx);
         return txID;
     }
 
@@ -297,10 +302,7 @@ namespace beam::wallet
         tx->SetParameter(TxParameterID::AtomicSwapAmount, swapAmount, false);
         tx->SetParameter(TxParameterID::AtomicSwapIsBeamSide, isBeamSide, false);
 
-        m_ActiveTransactions.emplace(txID, tx);
-
-        updateTransaction(txID);
-
+        ProcessTransaction(tx);
         return txID;
     }
 
@@ -325,9 +327,21 @@ namespace beam::wallet
         // Restore Incoming coins of active transactions
         m_WalletDB->save(ocoins);
 
-        SetUtxoEventsHeight(0);
+        storage::setVar(*m_WalletDB, s_szNextUtxoEvt, 0);
         RequestUtxoEvents();
         RefreshTransactions();
+    }
+
+    void Wallet::ProcessTransaction(wallet::BaseTransaction::Ptr tx)
+    {
+        auto txID = tx->GetTxID();
+        m_ActiveTransactions.emplace(txID, tx);
+        updateTransaction(txID);
+    }
+
+    void Wallet::RegisterTransactionType(TxType type, BaseTransaction::Creator creator)
+    {
+        m_TxCreators[type] = creator;
     }
 
     void Wallet::RefreshTransactions()
@@ -581,6 +595,18 @@ namespace beam::wallet
 
                 bool isBeamSide = it->second->GetMandatoryParameter<bool>(TxParameterID::AtomicSwapIsBeamSide);
                 return std::make_shared<LitecoinSide>(*it->second, m_litecoinBridge, isBeamSide);
+            }
+            
+            if (swapCoin == AtomicSwapCoin::Qtum)
+            {
+                if (!m_qtumBridge)
+                {
+                    LOG_ERROR() << "Qtum bridge is not initialized";
+                    return nullptr;
+                }
+
+                bool isBeamSide = it->second->GetMandatoryParameter<bool>(TxParameterID::AtomicSwapIsBeamSide);
+                return std::make_shared<QtumSide>(*it->second, m_qtumBridge, isBeamSide);
             }
         }
 
@@ -1156,18 +1182,16 @@ namespace beam::wallet
         return t;
     }
 
-    BaseTransaction::Ptr Wallet::constructTransaction(const TxID& id, TxType type)
+    wallet::BaseTransaction::Ptr Wallet::constructTransaction(const TxID& id, TxType type)
     {
-        switch (type)
+        auto it = m_TxCreators.find(type);
+        if (it == m_TxCreators.end())
         {
-        case TxType::Simple:
-             return make_shared<SimpleTransaction>(*this, m_WalletDB, m_KeyKeeper, id);
-        case TxType::AtomicSwap:
-            return make_shared<AtomicSwapTransaction>(*this, m_WalletDB, m_KeyKeeper, id);
-        default:
-            break;
+            LOG_ERROR() << id << " Unsupported type of transaction: " << static_cast<int>(type);
+            return wallet::BaseTransaction::Ptr();
         }
-        return BaseTransaction::Ptr();
+
+        return it->second(*this, m_WalletDB, m_KeyKeeper, id);
     }
 
     void Wallet::ProcessStoredMessages()

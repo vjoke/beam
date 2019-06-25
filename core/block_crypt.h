@@ -32,6 +32,12 @@ namespace beam
 
 	using ECC::Key;
 
+	namespace MasterKey
+	{
+		Key::IKdf::Ptr get_Child(Key::IKdf&, Key::Index);
+		Key::IKdf::Ptr get_Child(const Key::IKdf::Ptr&, const Key::IDV&);
+	}
+
 	Timestamp getTimestamp();
 	uint32_t GetTime_ms(); // platform-independent GetTickCount
 	uint32_t GetTimeNnz_ms(); // guaranteed non-zero
@@ -163,6 +169,7 @@ namespace beam
 		static void get_sk1(ECC::Scalar::Native& res, const ECC::Point::Native& comm0, const ECC::Point::Native& sk0_J);
 		void CreateInternal(ECC::Scalar::Native&, ECC::Point::Native&, bool bComm, Key::IKdf& kdf, const Key::IDV& kidv) const;
 		void AddValue(ECC::Point::Native& comm, Amount) const;
+		static void get_Hash(ECC::Hash::Value&, const Key::IDV&);
 	public:
 
 		ECC::Point::Native m_hGen;
@@ -491,12 +498,12 @@ namespace beam
 			NonceType m_Nonce; // 8 bytes. The overall solution size is 96 bytes.
 			Difficulty m_Difficulty;
 
-			bool IsValid(const void* pInput, uint32_t nSizeInput) const;
+			bool IsValid(const void* pInput, uint32_t nSizeInput, Height) const;
 
 			using Cancel = std::function<bool(bool bRetrying)>;
 			// Difficulty and Nonce must be initialized. During the solution it's incremented each time by 1.
 			// returns false only if cancelled
-			bool Solve(const void* pInput, uint32_t nSizeInput, const Cancel& = [](bool) { return false; });
+			bool Solve(const void* pInput, uint32_t nSizeInput, Height, const Cancel& = [](bool) { return false; });
 
 		private:
 			struct Helper;
@@ -539,7 +546,9 @@ namespace beam
 
 				bool IsSane() const;
 				bool IsValidPoW() const;
-				bool IsValid() const { return IsSane() && IsValidPoW(); }
+				bool IsValid() const {
+					return IsSane() && IsValidPoW(); 
+				}
                 bool GeneratePoW(const PoW::Cancel& = [](bool) { return false; });
 
 				// the most robust proof verification - verifies the whole proof structure
