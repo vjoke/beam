@@ -379,6 +379,15 @@ namespace beam::wallet
         }
 
         m_PartialSignature = m_Tx.GetKeyKeeper()->SignSync(m_InputCoins, m_OutputCoins, m_Offset, m_NonceSlot, kernelParameters, GetPublicNonce() + m_PeerPublicNonce);
+        
+        Signature signature;
+        signature.m_NoncePub = GetPublicNonce() + m_PeerPublicNonce;
+        signature.m_k = m_PartialSignature;
+
+        if (signature.IsValid(m_Message, totalPublicExcess))
+        {
+            LOG_DEBUG() << "Ok";
+        }
 
         StoreKernelID();
     }

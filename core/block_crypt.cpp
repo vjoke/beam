@@ -307,7 +307,7 @@ namespace beam
 
 	void Output::Prepare(ECC::Oracle& oracle, Height hScheme) const
 	{
-		oracle << m_Incubation;
+		//oracle << m_Incubation;
 
 		if (hScheme >= Rules::get().pForks[1].m_Height)
 		{

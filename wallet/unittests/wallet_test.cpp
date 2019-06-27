@@ -1399,47 +1399,180 @@ void TestNegotiation()
 
 
 #if defined(BEAM_HW_WALLET)
+
+IWalletDB::Ptr createSqliteWalletDB()
+{
+    const char* dbName = "wallet.db";
+    if (boost::filesystem::exists(dbName))
+    {
+        boost::filesystem::remove(dbName);
+    }
+    ECC::NoLeak<ECC::uintBig> seed;
+    seed.V = Zero;
+    auto walletDB = WalletDB::init(dbName, string("pass123"), seed, io::Reactor::get_Current().shared_from_this());
+    beam::Block::SystemState::ID id = { };
+    id.m_Height = 134;
+    walletDB->setSystemStateID(id);
+    return walletDB;
+}
+
 void TestHWWallet()
 {
+    io::Reactor::Ptr mainReactor{ io::Reactor::create() };
+    io::Reactor::Scope scope(*mainReactor);
+
     cout << "Test HW wallet" << std::endl;
 
-    HWWallet hw;
-    hw.getOwnerKey([](const std::string& key)
+    //HWWallet hw;
+    ////hw.getOwnerKey([](const std::string& key)
+    ////{
+    ////    LOG_INFO() << "HWWallet.getOwnerKey(): " << key;
+    ////});
+
+    ////hw.generateNonce(1, [](const ECC::Point& nonce)
+    ////{
+    ////    LOG_INFO() << "HWWallet.generateNonce(): " << nonce;
+    ////});
+
+    //const ECC::Key::IDV kidv(100500, 15, Key::Type::Regular, 7);
+
+    //ECC::Point pt2 = hw.generateKeySync(kidv, true);
+
+    //hw.generateRangeProof(kidv, false, [&pt2](const ECC::RangeProof::Confidential &rp) {
+    //    auto hGen = beam::SwitchCommitment(NULL).m_hGen;
+    //    // Recovery seed: copy, vendor, shallow, raven, coffee, appear, book, blast, lock, exchange, farm, glue
+    //    uint8_t x[] = {0xce, 0xb2, 0x0d, 0xa2, 0x73, 0x07, 0x0e, 0xb9, 0xc8, 0x2e, 0x47, 0x5b, 0x6f, 0xa0, 0x7b, 0x85, 0x8d, 0x2c, 0x40, 0x9b, 0x9c, 0x24, 0x31, 0xba, 0x3a, 0x8e, 0x2c, 0xba, 0x7b, 0xa1, 0xb0, 0x04};
+    //    ECC::Point pt;
+    //    pt.m_X = beam::Blob(x, 32);
+    //    pt.m_Y = 1;
+    //    WALLET_CHECK(pt == pt2);
+    //    ECC::Point::Native comm;
+    //    comm.Import(pt);
+    //    {
+    //        Oracle oracle;
+    //        //oracle << 0u;
+    //        LOG_INFO() << "rp.IsValid(): " << rp.IsValid(comm, oracle, &hGen);
+    //    }
+
+    //    {
+    //        Oracle oracle;
+    //        //oracle << 0u;
+    //        WALLET_CHECK(rp.IsValid(comm, oracle, &hGen));
+    //    }
+    //});
+
+    //{
+    //    TrezorKeyKeeper tk;
+    //    IPrivateKeyKeeper& pkk = tk;
+    //    ECC::Point::Native comm2;
+    //    auto outputs = pkk.GenerateOutputsSync(0, { kidv });
+    //    WALLET_CHECK(outputs[0]->IsValid(0, comm2));
+    //}
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //{
+
+    //TrezorKeyKeeper tk;
+    LocalPrivateKeyKeeper lpkk(createSqliteWalletDB());
+    IPrivateKeyKeeper& pkk = lpkk;
+
+    Point::Native totalPublicExcess = Zero;// = GetPublicExcess();
+
+    std::vector<Coin::ID> inputCoins = 
     {
-        LOG_INFO() << "HWWallet.getOwnerKey(): " << key;
-    });
+        {40, 0, Key::Type::Regular},
+    };
 
-    hw.generateNonce(1, [](const ECC::Point& nonce)
+    std::vector<Coin::ID> outputCoins =
     {
-        LOG_INFO() << "HWWallet.generateNonce(): " << nonce;
-    });
+        {16, 0, Key::Type::Regular},
+        {24, 0, Key::Type::Regular},
+    };
 
-    const ECC::Key::IDV kidv(100500, 15, Key::Type::Regular, 7);
+    beam::Amount fee = 0;
+    ECC::Scalar::Native offset = Zero;
+    offset.GenRandomNnz();
 
-    ECC::Point pt2 = hw.generateKeySync(kidv, true);
+    {
 
-    hw.generateRangeProof(kidv, false, [&pt2](const ECC::RangeProof::Confidential &rp) {
-        auto hGen = beam::SwitchCommitment(NULL).m_hGen;
-        // Recovery seed: copy, vendor, shallow, raven, coffee, appear, book, blast, lock, exchange, farm, glue
-        uint8_t x[] = {0xce, 0xb2, 0x0d, 0xa2, 0x73, 0x07, 0x0e, 0xb9, 0xc8, 0x2e, 0x47, 0x5b, 0x6f, 0xa0, 0x7b, 0x85, 0x8d, 0x2c, 0x40, 0x9b, 0x9c, 0x24, 0x31, 0xba, 0x3a, 0x8e, 0x2c, 0xba, 0x7b, 0xa1, 0xb0, 0x04};
-        ECC::Point pt;
-        pt.m_X = beam::Blob(x, 32);
-        pt.m_Y = 1;
-        WALLET_CHECK(pt == pt2);
-        ECC::Point::Native comm;
-        comm.Import(pt);
+        Point::Native publicAmount = Zero;
+        Amount amount = 0;
+        for (const auto& cid : inputCoins)
         {
-            Oracle oracle;
-            oracle << 0;
-            LOG_INFO() << "rp.IsValid(): " << rp.IsValid(comm, oracle, &hGen);
+            amount += cid.m_Value;
+        }
+        AmountBig::AddTo(publicAmount, amount);
+        amount = 0;
+        publicAmount = -publicAmount;
+        for (const auto& cid : outputCoins)
+        {
+            amount += cid.m_Value;
+        }
+        AmountBig::AddTo(publicAmount, amount);
+
+        Point::Native publicExcess = Context::get().G * offset;
+
+        {
+            Point::Native commitment;
+
+            for (const auto& output : outputCoins)
+            {
+                if (commitment.Import(pkk.GeneratePublicKeySync(output, true)))
+                {
+                    publicExcess += commitment;
+                }
+            }
+
+            totalPublicExcess = -totalPublicExcess;
+            for (const auto& input : inputCoins)
+            {
+                if (commitment.Import(pkk.GeneratePublicKeySync(input, true)))
+                {
+                    publicExcess += commitment;
+                }
+            }
         }
 
+        publicExcess += publicAmount;
+
+        totalPublicExcess = publicExcess;
+    }
+
+    {
+    //    totalPublicExcess += m_PeerPublicExcess;
+
+        TxKernel kernel;
+        kernel.m_Commitment = totalPublicExcess;
+
+        ECC::Hash::Value message;
+        kernel.get_Hash(message);
+
+        KernelParameters kernelParameters;
+        kernelParameters.fee = fee;
+
+        kernelParameters.height = { 25000, 27500 };
+        kernelParameters.commitment = totalPublicExcess;
+
+        Signature signature;
+
+        ECC::Point::Native publicNonce;
+        uint8_t nonceSlot = (uint8_t)pkk.AllocateNonceSlot();
+        publicNonce.Import(pkk.GenerateNonceSync(nonceSlot));
+
+        ECC::Point::Native peerPublicNonce = Zero;
+
+        signature.m_NoncePub = publicNonce + peerPublicNonce;
+        signature.m_k = pkk.SignSync(inputCoins, outputCoins, offset, nonceSlot, kernelParameters, publicNonce + peerPublicNonce);
+
+        if (signature.IsValid(message, totalPublicExcess))
         {
-            Oracle oracle;
-            oracle << 0;
-            WALLET_CHECK(rp.IsValid(comm, oracle, &hGen));
+            LOG_DEBUG() << "Ok";
         }
-    });
+    }
 }
 #endif
 
@@ -1468,17 +1601,17 @@ int main()
 
  //   TestSplitTransaction();
 
-    TestTxToHimself();
+    //TestTxToHimself();
 
-    //TestExpiredTransaction();
+    ////TestExpiredTransaction();
 
-    TestTransactionUpdate();
-    //TestTxPerformance();
+    //TestTransactionUpdate();
+    ////TestTxPerformance();
 
-    TestColdWalletSending();
-    TestColdWalletReceiving();
+    //TestColdWalletSending();
+    //TestColdWalletReceiving();
 
-    TestTxExceptionHandling();
+    //TestTxExceptionHandling();
 #if defined(BEAM_HW_WALLET)
     TestHWWallet();
 #endif

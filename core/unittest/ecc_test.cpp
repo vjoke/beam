@@ -111,16 +111,16 @@ inline void hex2bin(const char *hex_string, const size_t size_string, uint8_t *o
   uint32_t buffer = 0;
   for (size_t i = 0; i < size_string / 2; i++)
   {
-    sscanf(hex_string + 2 * i, "%2X", &buffer);
-    out_bytes[i] = buffer;
+    sscanf_s(hex_string + 2 * i, "%2X", &buffer);
+    out_bytes[i] = (uint8_t)buffer;
   }
 }
 
 int IS_EQUAL_HEX(const char *hex_str, const uint8_t *bytes, size_t str_size)
 {
-  uint8_t tmp[str_size / 2];
-  hex2bin(hex_str, str_size, tmp);
-  return memcmp(tmp, bytes, str_size / 2) == 0;
+  std::vector<uint8_t> tmp(str_size / 2);
+  hex2bin(hex_str, str_size, &tmp[0]);
+  return memcmp(&tmp[0], bytes, str_size / 2) == 0;
 }
 
 namespace ECC {
@@ -1389,21 +1389,72 @@ struct TrezorWallet
 
     void ResetNonce(Point::Native& res, uint32_t iSlot) override
     {
-
+        if (!res.Import(m_trezor.generateNonceSync((uint8_t)iSlot)))
+        {
+            assert(false);
+        }
     }
 
     void SummarizeCommitment(Point::Native& res, const TransactionInOuts& tx) override
     {
+        //AmountSigned val = 0;
 
+        for (uint32_t i = 0; i < tx.m_Outputs; i++)
+        {
+            ECC::Point::Native comm;
+            if (!comm.Import(m_trezor.generateKeySync(tx.m_pOutputs[i], true)))
+            {
+                assert(false);
+            }
+            res += comm;
+
+            //val += tx.m_pOutputs[i].m_Value;
+        }
+
+        for (uint32_t i = 0; i < tx.m_Inputs; i++)
+        {
+            ECC::Point::Native comm;
+
+            if (!comm.Import(m_trezor.generateKeySync(tx.m_pInputs[i], true)))
+            {
+                assert(false);
+            }
+
+            res -= comm;
+
+            //val -= tx.m_pInputs[i].m_Value;
+        }
+
+        // do we need to do this?
+        //if (val < 0)
+        //{
+        //    res = -res;
+        //    res += Context::get().H * Amount(-val);
+        //    res = -res;
+        //}
+        //else
+        //    res += Context::get().H * Amount(val);
     }
 
     void CreateOutput(beam::Output& outp, const Key::IDV& kidv)  override
     {
+        outp.m_Commitment = m_trezor.generateKeySync(kidv, true);
+
+        outp.m_pConfidential.reset(new ECC::RangeProof::Confidential);
+        *outp.m_pConfidential = m_trezor.generateRangeProofSync(kidv, false);
     }
 
     bool SignTransaction(Scalar::Native& res, const TransactionData& tx) override
     {
-        return false;
+        beam::HWWallet::TxData txData;
+        txData.fee = tx.m_Fee;
+        txData.height = tx.m_Height;
+        txData.kernelCommitment = tx.m_KernelCommitment;
+        txData.kernelNonce = tx.m_KernelNonce;
+        txData.nonceSlot = tx.m_iNonce;
+        txData.offset = tx.m_Offset;
+
+        return res.Import(m_trezor.signTransactionSync(std::vector<Key::IDV>(tx.m_pInputs, tx.m_pInputs + tx.m_Inputs), std::vector<Key::IDV>(tx.m_pOutputs, tx.m_pOutputs+ tx.m_Outputs), txData));
     }
 };
 
@@ -2175,7 +2226,7 @@ void TestTransactionHWSingular()
 
 #if TREZOR_DEBUG == 1
     printf("Kernel params for TX sign:\n\tFee: %ld\n\tMin_height: %ld; Max_height: %ld\n\tAsset_emission: %ld\n",
-           mw1.m_Kernel.m_Fee, mw1.m_Kernel.m_Height.m_Min, mw1.m_Kernel.m_Height.m_Max, mw1.m_Kernel.m_AssetEmission);
+           (long)mw1.m_Kernel.m_Fee, (long)mw1.m_Kernel.m_Height.m_Min, (long)mw1.m_Kernel.m_Height.m_Max, (long)mw1.m_Kernel.m_AssetEmission);
     char point_str[64];
     mw1.m_Kernel.m_Signature.m_NoncePub.m_X.Print(point_str);
     printf("\tNonce pub x: %s\n", point_str);
@@ -2197,31 +2248,31 @@ void TestTransactionHWSingular()
 
 void TestAll()
 {
-	 TestUintBig();
-	 TestHash();
-	 TestScalars();
-	 TestPoints();
-	 TestSigning();
-	 TestCommitments();
-	 TestRangeProof(false);
-	 TestRangeProof(true);
-	 TestTransaction();
-     TestTransactionHW<HWWalletEmulator>();
-     TestTxKernel();
-     TestTransactionHWSingular();
+	 //TestUintBig();
+	 //TestHash();
+	 //TestScalars();
+	 //TestPoints();
+	 //TestSigning();
+	 //TestCommitments();
+	 //TestRangeProof(false);
+	 //TestRangeProof(true);
+	 //TestTransaction();
+  //   TestTransactionHW<HWWalletEmulator>();
+  //   TestTxKernel();
+  //   TestTransactionHWSingular();
 
 #if defined(BEAM_HW_WALLET)
     TestTransactionHW<TrezorWallet>();
 #endif
-     TestMultiSigOutput();
-	 TestCutThrough();
-	 TestAES();
-	 TestKdf();
-	 TestBbs();
-	 TestDifficulty();
-	 TestRandom();
-	 TestFourCC();
-	 TestTreasury();
+  //   TestMultiSigOutput();
+	 //TestCutThrough();
+	 //TestAES();
+	 //TestKdf();
+	 //TestBbs();
+	 //TestDifficulty();
+	 //TestRandom();
+	 //TestFourCC();
+	 //TestTreasury();
 }
 
 
@@ -2726,7 +2777,7 @@ int main()
 	beam::Rules::get().CA.Enabled = true;
 	beam::Rules::get().pForks[1].m_Height = g_hFork;
 	ECC::TestAll();
-	ECC::RunBenchmark();
+	//ECC::RunBenchmark();
 
 	secp256k1_context_destroy(g_psecp256k1);
 
