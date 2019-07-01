@@ -1416,73 +1416,14 @@ IWalletDB::Ptr createSqliteWalletDB()
     return walletDB;
 }
 
-void TestHWWallet()
+void TestHWTransaction(IPrivateKeyKeeper& pkk)
 {
     io::Reactor::Ptr mainReactor{ io::Reactor::create() };
     io::Reactor::Scope scope(*mainReactor);
 
-    cout << "Test HW wallet" << std::endl;
+    Point::Native totalPublicExcess = Zero;
 
-    //HWWallet hw;
-    ////hw.getOwnerKey([](const std::string& key)
-    ////{
-    ////    LOG_INFO() << "HWWallet.getOwnerKey(): " << key;
-    ////});
-
-    ////hw.generateNonce(1, [](const ECC::Point& nonce)
-    ////{
-    ////    LOG_INFO() << "HWWallet.generateNonce(): " << nonce;
-    ////});
-
-    //const ECC::Key::IDV kidv(100500, 15, Key::Type::Regular, 7);
-
-    //ECC::Point pt2 = hw.generateKeySync(kidv, true);
-
-    //hw.generateRangeProof(kidv, false, [&pt2](const ECC::RangeProof::Confidential &rp) {
-    //    auto hGen = beam::SwitchCommitment(NULL).m_hGen;
-    //    // Recovery seed: copy, vendor, shallow, raven, coffee, appear, book, blast, lock, exchange, farm, glue
-    //    uint8_t x[] = {0xce, 0xb2, 0x0d, 0xa2, 0x73, 0x07, 0x0e, 0xb9, 0xc8, 0x2e, 0x47, 0x5b, 0x6f, 0xa0, 0x7b, 0x85, 0x8d, 0x2c, 0x40, 0x9b, 0x9c, 0x24, 0x31, 0xba, 0x3a, 0x8e, 0x2c, 0xba, 0x7b, 0xa1, 0xb0, 0x04};
-    //    ECC::Point pt;
-    //    pt.m_X = beam::Blob(x, 32);
-    //    pt.m_Y = 1;
-    //    WALLET_CHECK(pt == pt2);
-    //    ECC::Point::Native comm;
-    //    comm.Import(pt);
-    //    {
-    //        Oracle oracle;
-    //        //oracle << 0u;
-    //        LOG_INFO() << "rp.IsValid(): " << rp.IsValid(comm, oracle, &hGen);
-    //    }
-
-    //    {
-    //        Oracle oracle;
-    //        //oracle << 0u;
-    //        WALLET_CHECK(rp.IsValid(comm, oracle, &hGen));
-    //    }
-    //});
-
-    //{
-    //    TrezorKeyKeeper tk;
-    //    IPrivateKeyKeeper& pkk = tk;
-    //    ECC::Point::Native comm2;
-    //    auto outputs = pkk.GenerateOutputsSync(0, { kidv });
-    //    WALLET_CHECK(outputs[0]->IsValid(0, comm2));
-    //}
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //{
-
-    //TrezorKeyKeeper tk;
-    LocalPrivateKeyKeeper lpkk(createSqliteWalletDB());
-    IPrivateKeyKeeper& pkk = lpkk;
-
-    Point::Native totalPublicExcess = Zero;// = GetPublicExcess();
-
-    std::vector<Coin::ID> inputCoins = 
+    std::vector<Coin::ID> inputCoins =
     {
         {40, 0, Key::Type::Regular},
     };
@@ -1527,7 +1468,7 @@ void TestHWWallet()
                 }
             }
 
-            totalPublicExcess = -totalPublicExcess;
+            publicExcess = -publicExcess;
             for (const auto& input : inputCoins)
             {
                 if (commitment.Import(pkk.GeneratePublicKeySync(input, true)))
@@ -1543,9 +1484,11 @@ void TestHWWallet()
     }
 
     {
-    //    totalPublicExcess += m_PeerPublicExcess;
+        ECC::Point::Native peerPublicNonce = Zero;
 
         TxKernel kernel;
+        kernel.m_Fee = fee;
+        kernel.m_Height = { 25000, 27500 };
         kernel.m_Commitment = totalPublicExcess;
 
         ECC::Hash::Value message;
@@ -1563,16 +1506,86 @@ void TestHWWallet()
         uint8_t nonceSlot = (uint8_t)pkk.AllocateNonceSlot();
         publicNonce.Import(pkk.GenerateNonceSync(nonceSlot));
 
-        ECC::Point::Native peerPublicNonce = Zero;
 
         signature.m_NoncePub = publicNonce + peerPublicNonce;
         signature.m_k = pkk.SignSync(inputCoins, outputCoins, offset, nonceSlot, kernelParameters, publicNonce + peerPublicNonce);
 
         if (signature.IsValid(message, totalPublicExcess))
         {
-            LOG_DEBUG() << "Ok";
+            LOG_DEBUG() << "Ok, signature is valid :)";
+        }
+        else
+        {
+            LOG_ERROR() << "Error, invalid signature :(";
         }
     }
+}
+
+void TestHWWallet()
+{
+    cout << "Test HW wallet" << std::endl;
+
+    //HWWallet hw;
+    //hw.getOwnerKey([](const std::string& key)
+    //{
+    //    LOG_INFO() << "HWWallet.getOwnerKey(): " << key;
+    //});
+
+    //hw.generateNonce(1, [](const ECC::Point& nonce)
+    //{
+    //    LOG_INFO() << "HWWallet.generateNonce(): " << nonce;
+    //});
+
+    //const ECC::Key::IDV kidv(100500, 15, Key::Type::Regular, 7);
+
+    //ECC::Point pt2 = hw.generateKeySync(kidv, true);
+
+    //hw.generateRangeProof(kidv, false, [&pt2](const ECC::RangeProof::Confidential &rp) {
+    //    auto hGen = beam::SwitchCommitment(NULL).m_hGen;
+    //    // Recovery seed: copy, vendor, shallow, raven, coffee, appear, book, blast, lock, exchange, farm, glue
+    //    uint8_t x[] = {0xce, 0xb2, 0x0d, 0xa2, 0x73, 0x07, 0x0e, 0xb9, 0xc8, 0x2e, 0x47, 0x5b, 0x6f, 0xa0, 0x7b, 0x85, 0x8d, 0x2c, 0x40, 0x9b, 0x9c, 0x24, 0x31, 0xba, 0x3a, 0x8e, 0x2c, 0xba, 0x7b, 0xa1, 0xb0, 0x04};
+    //    ECC::Point pt;
+    //    pt.m_X = beam::Blob(x, 32);
+    //    pt.m_Y = 1;
+    //    WALLET_CHECK(pt == pt2);
+    //    ECC::Point::Native comm;
+    //    comm.Import(pt);
+    //    {
+    //        Oracle oracle;
+    //        //oracle << 0u;
+    //        LOG_INFO() << "rp.IsValid(): " << rp.IsValid(comm, oracle, &hGen);
+    //    }
+
+    //    {
+    //        Oracle oracle;
+    //        //oracle << 0u;
+    //        WALLET_CHECK(rp.IsValid(comm, oracle, &hGen));
+    //    }
+    //});
+
+    //{
+    //    TrezorKeyKeeper tk;
+    //    IPrivateKeyKeeper& pkk = tk;
+    //    ECC::Point::Native comm2;
+    //    auto outputs = pkk.GenerateOutputsSync(0, { kidv });
+    //    WALLET_CHECK(outputs[0]->IsValid(0, comm2));
+    //}
+
+    // test transaction sign with local key keeper
+    {
+        io::Reactor::Ptr mainReactor{ io::Reactor::create() };
+        io::Reactor::Scope scope(*mainReactor);
+
+        LocalPrivateKeyKeeper lpkk(createSqliteWalletDB());
+        TestHWTransaction(lpkk);
+    }
+
+    // test transaction sign with HW key keeper
+    {
+        TrezorKeyKeeper trezor;
+        TestHWTransaction(trezor);
+    }
+
 }
 #endif
 
