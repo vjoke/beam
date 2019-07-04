@@ -27,6 +27,8 @@ namespace
     constexpr uint32_t kBTCMaxHeightDifference = 10;
     // it's average value
     constexpr uint32_t kBtcTxTimeInBeamBlocks = 70;
+    constexpr uint32_t kBTCTransactionVersion = 2;
+
 
     libbitcoin::chain::script AtomicSwapContract(const libbitcoin::ec_compressed& publicKeyA
         , const libbitcoin::ec_compressed& publicKeyB
@@ -326,6 +328,7 @@ namespace beam::wallet
             Amount swapAmount = m_tx.GetMandatoryParameter<Amount>(TxParameterID::AtomicSwapAmount);
 
             libbitcoin::chain::transaction contractTx;
+            contractTx.set_version(kBTCTransactionVersion);
             libbitcoin::chain::script outputScript = libbitcoin::chain::script::to_pay_script_hash_pattern(libbitcoin::bitcoin_short_hash(contractScript.to_data(false)));
             libbitcoin::chain::output output(swapAmount, outputScript);
             contractTx.outputs().push_back(output);
@@ -385,6 +388,13 @@ namespace beam::wallet
 
         if (swapTxState == SwapTxState::CreatingTx)
         {
+            if (!m_SwapWithdrawRawTx.is_initialized())
+            {
+                LOG_ERROR() << m_tx.GetTxID() << "[" << subTxID << "]" << " Incorrect state, rebuilding.";
+                m_tx.SetState(SwapTxState::Initial, subTxID);
+                return SwapTxState::Initial;
+            }
+
             std::string withdrawAddress = GetWithdrawAddress();
             auto callback = [this, subTxID, weak = this->weak_from_this()](const IBitcoinBridge::Error& error, const std::string& privateKey) {
                 if (!weak.expired())

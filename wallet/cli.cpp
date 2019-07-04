@@ -453,14 +453,18 @@ namespace
         {
             walletID.FromHex(address);
         }
-        uint64_t newDuration_s = 0;
+        bool makeEternal = false, makeActive = false, makeExpired = false;
         if (newTime == "24h")
         {
-            newDuration_s = 24 * 3600; //seconds
+            makeActive = true;
         }
         else if (newTime == "never")
         {
-            newDuration_s = 0;
+            makeEternal = true;
+        }
+        else if (newTime == "now")
+        {
+            makeExpired = true;
         }
         else
         {
@@ -468,7 +472,7 @@ namespace
             return -1;
         }
 
-        if (storage::changeAddressExpiration(*walletDB, walletID, newDuration_s))
+        if (storage::changeAddressExpiration(*walletDB, walletID, makeEternal, makeActive, makeExpired))
         {
             if (allAddresses)
             {
@@ -690,7 +694,7 @@ namespace
             << setw(columnWidths[5]) << " type" << endl;
 
         
-        walletDB->visit([&columnWidths](const Coin& c)->bool
+        walletDB->visitCoins([&columnWidths](const Coin& c)->bool
         {
             cout << "   "
                 << " " << left << setw(columnWidths[0]) << c.toStringID()
@@ -989,16 +993,6 @@ namespace
 
             btcOptions.m_feeRate = vm[cli::SWAP_FEERATE].as<Positive<Amount>>().value;
 
-            if (vm.count(cli::BTC_CONFIRMATIONS) > 0)
-            {
-                btcOptions.m_confirmations = vm[cli::BTC_CONFIRMATIONS].as<Positive<uint16_t>>().value;
-            }
-
-            if (vm.count(cli::BTC_LOCK_TIME) > 0)
-            {
-                btcOptions.m_lockTimeInBlocks = vm[cli::BTC_LOCK_TIME].as<Positive<uint32_t>>().value;
-            }
-
             auto swapSecondSideChainType = ParseSwapSecondSideChainType(vm);
             if (swapSecondSideChainType != SwapSecondSideChainType::Unknown)
             {
@@ -1044,16 +1038,6 @@ namespace
             }
             ltcOptions.m_feeRate = vm[cli::SWAP_FEERATE].as<Positive<Amount>>().value;
 
-            if (vm.count(cli::LTC_CONFIRMATIONS) > 0)
-            {
-                ltcOptions.m_confirmations = vm[cli::LTC_CONFIRMATIONS].as<Positive<uint16_t>>().value;
-            }
-
-            if (vm.count(cli::LTC_LOCK_TIME) > 0)
-            {
-                ltcOptions.m_lockTimeInBlocks = vm[cli::LTC_LOCK_TIME].as<Positive<uint32_t>>().value;
-            }
-
             auto swapSecondSideChainType = ParseSwapSecondSideChainType(vm);
             if (swapSecondSideChainType != SwapSecondSideChainType::Unknown)
             {
@@ -1098,16 +1082,6 @@ namespace
                 throw std::runtime_error("swap fee rate is missing");
             }
             qtumOptions.m_feeRate = vm[cli::SWAP_FEERATE].as<Positive<Amount>>().value;
-
-            if (vm.count(cli::QTUM_CONFIRMATIONS) > 0)
-            {
-                qtumOptions.m_confirmations = vm[cli::QTUM_CONFIRMATIONS].as<Positive<uint16_t>>().value;
-            }
-
-            if (vm.count(cli::QTUM_LOCK_TIME) > 0)
-            {
-                qtumOptions.m_lockTimeInBlocks = vm[cli::QTUM_LOCK_TIME].as<Positive<uint32_t>>().value;
-            }
 
             auto swapSecondSideChainType = ParseSwapSecondSideChainType(vm);
             if (swapSecondSideChainType != SwapSecondSideChainType::Unknown)
@@ -1517,6 +1491,7 @@ int main_impl(int argc, char* argv[])
 
                             Amount swapAmount = vm[cli::SWAP_AMOUNT].as<Positive<Amount>>().value;
 
+                            SwapSecondSideChainType secondSideChainType = SwapSecondSideChainType::Mainnet;
                             wallet::AtomicSwapCoin swapCoin = wallet::AtomicSwapCoin::Bitcoin;
 
                             if (vm.count(cli::SWAP_COIN) > 0)
@@ -1543,6 +1518,7 @@ int main_impl(int argc, char* argv[])
                                     LOG_ERROR() << "The swap amount must be greater than the redemption fee.";
                                     return -1;
                                 }
+                                secondSideChainType = btcOptions->m_chainType;
                             }
                             else if (swapCoin == wallet::AtomicSwapCoin::Litecoin)
                             {
@@ -1556,6 +1532,7 @@ int main_impl(int argc, char* argv[])
                                     LOG_ERROR() << "The swap amount must be greater than the redemption fee.";
                                     return -1;
                                 }
+                                secondSideChainType = ltcOptions->m_chainType;
                             }
                             else
                             {
@@ -1569,6 +1546,7 @@ int main_impl(int argc, char* argv[])
                                     LOG_ERROR() << "The swap amount must be greater than the redemption fee.";
                                     return -1;
                                 }
+                                secondSideChainType = qtumOptions->m_chainType;
                             }
                             
                             bool isBeamSide = (vm.count(cli::SWAP_BEAM_SIDE) != 0);
@@ -1595,7 +1573,7 @@ int main_impl(int argc, char* argv[])
                                 WalletAddress senderAddress = CreateNewAddress(walletDB, "");
 
                                 currentTxID = wallet.swap_coins(senderAddress.m_walletID, receiverWalletID, 
-                                    move(amount), move(fee), swapCoin, swapAmount, isBeamSide);
+                                    move(amount), move(fee), swapCoin, swapAmount, secondSideChainType, isBeamSide);
                             }
 
                             if (command == cli::SWAP_LISTEN)
@@ -1622,8 +1600,7 @@ int main_impl(int argc, char* argv[])
                                     LOG_ERROR() << "The amount must be greater than the redemption fee.";
                                     return -1;
                                 }
-
-                                wallet.initSwapConditions(amount, swapAmount, swapCoin, isBeamSide);
+                                wallet.initSwapConditions(amount, swapAmount, swapCoin, isBeamSide, secondSideChainType);
                             }
                         }
 

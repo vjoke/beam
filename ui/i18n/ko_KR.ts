@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="fr" sourcelanguage="en">
+<TS version="2.1" language="ko" sourcelanguage="en">
 <context>
     <name></name>
     <message id="general-beam">
@@ -13,165 +13,165 @@
     </message>
     <message id="general-comment">
         <source>Comment</source>
-        <translation>Commentaire</translation>
+        <translation>메모</translation>
     </message>
     <message id="general-contact">
         <source>Contact</source>
-        <translation>Contact</translation>
+        <translation>연락처</translation>
     </message>
     <message id="general-category">
         <source>Category</source>
-        <translation>Catégorie</translation>
+        <translation>카테고리</translation>
     </message>
     <message id="general-actions">
         <source>Actions</source>
-        <translation>Actions</translation>
+        <translation type="unfinished">Actions</translation>
     </message>
     <message id="general-address">
         <source>Address</source>
-        <translation>Adresse</translation>
+        <translation>주소</translation>
     </message>
     <message id="general-exp-date">
         <source>Expiration date</source>
-        <translation>Date d&apos;expiration</translation>
+        <translation>만료 일자</translation>
     </message>
     <message id="general-created">
         <source>Created</source>
-        <translation>Crée</translation>
+        <translation>생성됨</translation>
     </message>
     <message id="general-send">
         <source>Send</source>
-        <translation type="unfinished">Send</translation>
+        <translation>보내기</translation>
     </message>
     <message id="general-amount">
         <source>Amount</source>
-        <translation>Montant</translation>
+        <translation>양</translation>
     </message>
     <message id="general-status">
         <source>Status</source>
-        <translation>Status</translation>
+        <translation>상태</translation>
     </message>
     <message id="general-cancel">
         <source>Cancel</source>
         <extracomment>Edit addres dialog, cancel button</extracomment>
-        <translation type="unfinished">Cancel</translation>
+        <translation>취소</translation>
     </message>
     <message id="general-delete">
         <source>Delete</source>
-        <translation type="unfinished">Delete</translation>
+        <translation>삭제</translation>
     </message>
     <message id="general-receiving">
         <source>receiving</source>
-        <translation>receiving</translation>
+        <translation>받는 중</translation>
     </message>
     <message id="general-sending">
         <source>sending</source>
-        <translation>sending</translation>
+        <translation>보내는 중</translation>
     </message>
     <message id="general-rescan">
         <source>Rescan</source>
-        <translation>Scanner à nouveau</translation>
+        <translation>다시 스캔하기</translation>
     </message>
     <message id="general-change-pwd">
         <source>Change wallet password</source>
-        <translation>Modifier le mot de passe du portefeuille</translation>
+        <translation>지갑 비밀번호 바꾸기</translation>
     </message>
     <message id="general-pwd-empty-error">
         <source>Please, enter password</source>
-        <translation>Merci de saisir votre mot de passe</translation>
+        <translation>비밀번호를 입력해주세요</translation>
     </message>
     <message id="general-pwd-invalid">
         <source>Invalid password provided</source>
-        <translation>Le mot de passe saisi est invalide</translation>
+        <translation>유효하지 않은 비밀번호가 제공 되었습니다 </translation>
     </message>
     <message id="general-payment-proof">
         <source>Payment proof</source>
-        <translation>Preuve de paiement</translation>
+        <translation>지불 증명</translation>
     </message>
     <message id="general-close">
         <source>Close</source>
-        <translation type="unfinished">Close</translation>
+        <translation>닫기</translation>
     </message>
     <message id="general-details">
         <source>Details</source>
-        <translation>Détails</translation>
+        <translation>세부사항</translation>
     </message>
     <message id="general-kernel-id">
         <source>Kernel ID</source>
-        <translation type="unfinished">Kernel ID</translation>
+        <translation>커널 ID</translation>
     </message>
     <message id="general-copy">
         <source>Copy</source>
-        <translation type="unfinished">Copy</translation>
+        <translation>복사</translation>
     </message>
     <message id="general-paste">
         <source>Paste</source>
-        <translation type="unfinished">Paste</translation>
+        <translation>붙여넣기</translation>
     </message>
     <message id="general-fee">
         <source>Transaction fee</source>
-        <translation>Frais de transaction</translation>
+        <translation>거래 수수료</translation>
     </message>
     <message id="general-ok">
         <source>Ok</source>
-        <translation type="unfinished">Ok</translation>
+        <translation>네</translation>
     </message>
     <message id="general-invalid-address">
         <source>Invalid address</source>
-        <translation>Adresse invalide</translation>
+        <translation>유효하지 않은 주소</translation>
     </message>
     <message id="general-coinbase">
         <source>Coinbase</source>
-        <translation>Coinbase</translation>
+        <translation>코인베이스</translation>
     </message>
     <message id="general-regular">
         <source>Regular</source>
-        <translation>Régulier</translation>
+        <translation type="unfinished">Regular</translation>
     </message>
     <message id="general-change">
         <source>Change</source>
-        <translation>Changement</translation>
+        <translation>잔액</translation>
     </message>
     <message id="general-treasury">
         <source>Treasury</source>
-        <translation>Trésorerie</translation>
+        <translation type="unfinished">Treasury</translation>
     </message>
     <message id="general-back">
         <source>Back</source>
-        <translation type="unfinished">Back</translation>
+        <translation>뒤로가기</translation>
     </message>
     <message id="general-next">
         <source>Next</source>
-        <translation type="unfinished">Next</translation>
+        <translation>다음</translation>
     </message>
     <message id="general-create-wallet">
         <source>Create new wallet</source>
-        <translation>Créer un nouveau portefeuille</translation>
+        <translation>새로운 지갑 만들기</translation>
     </message>
     <message id="general-restore-or-create-wallet">
         <source>Restore wallet or create a new one</source>
-        <translation>Restaurer un portefeuille existant ou créer un nouveau portefeuille</translation>
+        <translation>지갑을 복구하거나 새로운 것을 1개 만드시오</translation>
     </message>
     <message id="general-select-db">
         <source>Select the wallet database file</source>
-        <translation>Sélectionnez le fichier de base de données du portefeuille</translation>
+        <translation>지갑 데이터베이스 파일 선택하기</translation>
     </message>
     <message id="general-restore-wallet">
         <source>Restore wallet</source>
-        <translation>Restauration du Portefeuille</translation>
+        <translation>지갑 복구하기</translation>
     </message>
     <message id="general-start-using">
         <source>Start using your wallet</source>
-        <translation type="unfinished">Start using your wallet</translation>
+        <translation>지갑 사용 시작하기</translation>
     </message>
     <message id="general-open-wallet">
         <source>Open my wallet</source>
-        <translation type="unfinished">Open my wallet</translation>
+        <translation>내 지갑 열기</translation>
     </message>
     <message id="general-proceed">
         <source>Proceed</source>
         <extracomment>confirm password dialog, ok button</extracomment>
-        <translation type="unfinished">Proceed</translation>
+        <translation>진행중</translation>
     </message>
     <message id="general-show-in-folder">
         <source>Show in folder</source>
@@ -179,284 +179,284 @@
     </message>
     <message id="general-addr-comment-error">
         <source>Address with same comment already exist</source>
-        <translation type="unfinished">Address with same comment already exist</translation>
+        <translation>동일한 메모가 있는 주소가 이미 존재합니다</translation>
     </message>
     <message id="wallet-receive-button">
         <source>Receive</source>
-        <translation type="unfinished">Receive</translation>
+        <translation>받기</translation>
     </message>
     <message id="wallet-in-progress-title">
         <source>In progress</source>
-        <translation>En cours</translation>
+        <translation>진행중</translation>
     </message>
     <message id="wallet-transactions-title">
         <source>Transactions</source>
-        <translation>Transactions</translation>
+        <translation>거래내역</translation>
     </message>
     <message id="wallet-verify-payment">
         <source>Verify payment</source>
-        <translation>Vérifier paiement</translation>
+        <translation>지불 증명</translation>
     </message>
     <message id="wallet-txs-date-time">
         <source>Date | Time</source>
-        <translation type="unfinished">Date | Time</translation>
+        <translation>날짜 | 시간</translation>
     </message>
     <message id="wallet-txs-copy-addr-cm">
         <source>Copy address</source>
-        <translation type="unfinished">Copy address</translation>
+        <translation>주소 복사</translation>
     </message>
     <message id="wallet-txs-delete-message">
         <source>The transaction will be deleted. This operation can not be undone</source>
-        <translation>La transaction sera supprimée. Cette opération ne peut pas être annulée</translation>
+        <translation>거래는 삭제될 것입니다. 해당 작업은 취소될 수 없습니다.</translation>
     </message>
     <message id="wallet-txs-status-pending">
         <source>pending</source>
-        <translation type="unfinished">pending</translation>
+        <translation>펜딩 중</translation>
     </message>
     <message id="wallet-txs-status-waiting-sender">
         <source>waiting for sender</source>
-        <translation type="unfinished">waiting for sender</translation>
+        <translation>보내는 사람을 기다리는 중</translation>
     </message>
     <message id="wallet-txs-status-waiting-receiver">
         <source>waiting for receiver</source>
-        <translation type="unfinished">waiting for receiver</translation>
+        <translation>받는 사람을 기다리는 중</translation>
     </message>
     <message id="wallet-txs-status-completed">
         <source>completed</source>
-        <translation type="unfinished">completed</translation>
+        <translation>완성</translation>
     </message>
     <message id="wallet-txs-status-received">
         <source>received</source>
-        <translation type="unfinished">received</translation>
+        <translation>받음</translation>
     </message>
     <message id="wallet-txs-status-sent">
         <source>sent</source>
-        <translation type="unfinished">sent</translation>
+        <translation>보냄</translation>
     </message>
     <message id="wallet-txs-status-cancelled">
         <source>cancelled</source>
-        <translation type="unfinished">cancelled</translation>
+        <translation>취소됨</translation>
     </message>
     <message id="wallet-txs-status-expired">
         <source>expired</source>
-        <translation type="unfinished">expired</translation>
+        <translation>만료</translation>
     </message>
     <message id="wallet-txs-status-failed">
         <source>failed</source>
-        <translation type="unfinished">failed</translation>
+        <translation>실패</translation>
     </message>
     <message id="wallet-txs-status-unknown">
         <source>unknown</source>
-        <translation type="unfinished">unknown</translation>
+        <translation>알려지지 않음</translation>
     </message>
     <message id="addresses-tittle">
         <source>Addresses</source>
-        <translation>Adresses</translation>
+        <translation>주소</translation>
     </message>
     <message id="addresses-tab-active">
         <source>My active addresses</source>
-        <translation type="unfinished">My active addresses</translation>
+        <translation>활성화 상태의 주소들</translation>
     </message>
     <message id="addresses-tab-expired">
         <source>My expired addresses</source>
-        <translation type="unfinished">My expired addresses</translation>
+        <translation>만료된 내 주소들</translation>
     </message>
     <message id="addresses-tab-contacts">
         <source>Contacts</source>
-        <translation type="unfinished">Contacts</translation>
+        <translation>연락처</translation>
     </message>
     <message id="address-table-cm-show-qr">
         <source>Show QR code</source>
         <extracomment>Entry in adress table context menu to show QR</extracomment>
-        <translation type="unfinished">Show QR code</translation>
+        <translation>QR 코드 보이기</translation>
     </message>
     <message id="address-table-cm-edit">
         <source>Edit address</source>
         <extracomment>Entry in adress table context menu to edit</extracomment>
-        <translation>Modifier adresse</translation>
+        <translation>주소 수정</translation>
     </message>
     <message id="address-table-cm-delete">
         <source>Delete address</source>
         <extracomment>Entry in adress table context menu to delete</extracomment>
-        <translation type="unfinished">Delete address</translation>
+        <translation>주소 삭제</translation>
     </message>
     <message id="address-table-cm-delete-contact">
         <source>Delete contact</source>
-        <translation type="unfinished">Delete contact</translation>
+        <translation>연락처 삭제</translation>
     </message>
     <message id="available-panel-available">
         <source>Available</source>
-        <translation>Disponible</translation>
+        <translation>가능함</translation>
     </message>
     <message id="available-panel-where-to-buy">
         <source>Where to buy BEAM?</source>
-        <translation>Où acheter Beam?</translation>
+        <translation>BEAM 은 어디서 사나요?</translation>
     </message>
     <message id="settings-version">
         <source>Version</source>
         <extracomment>settings tab, version label</extracomment>
-        <translation type="unfinished">Version</translation>
+        <translation>버전</translation>
     </message>
     <message id="settings-remote-node-ip-port">
         <source>ip:port</source>
         <extracomment>settings tab, node section, address label</extracomment>
-        <translation>ip:port</translation>
+        <translation>아이피 : 포트</translation>
     </message>
     <message id="settings-local-node-run-checkbox">
         <source>Run local node</source>
         <extracomment>settings tab, node section, run node label</extracomment>
-        <translation>Opérer un noeud local</translation>
+        <translation>로컬 노드 실행하기</translation>
     </message>
     <message id="settings-local-node-port">
         <source>Port</source>
         <extracomment>settings tab, node section, port label</extracomment>
-        <translation>Port</translation>
+        <translation>포트</translation>
     </message>
     <message id="settings-rescan-confirmation-message">
         <source>Rescan will sync transaction and UTXO data with the latest information on the blockchain. The process might take long time.</source>
         <extracomment>settings tab, confirm rescan dialog message</extracomment>
-        <translation>Le nouveau scan a pour fonction de syncroniser les transactions ainsi que les données UTXO avec les dernières informations situées sur la Blockchain. Cette opération peut prendre du temps. </translation>
+        <translation type="unfinished">Rescan will sync transaction and UTXO data with the latest information on the blockchain. The process might take long time.</translation>
     </message>
     <message id="settings-general-title">
         <source>General settings</source>
         <extracomment>settings tab, general section, title</extracomment>
-        <translation>Paramètres généraux</translation>
+        <translation>일반 설정</translation>
     </message>
     <message id="settings-general-lock-screen">
         <source>Lock screen</source>
         <extracomment>settings tab, general section, lock screen label</extracomment>
-        <translation>Vérouiller écran</translation>
+        <translation>잠금 화면</translation>
     </message>
     <message id="settings-general-require-pwd-to-spend">
         <source>Ask password for every sending transaction</source>
         <extracomment>settings tab, general section, ask password to send label</extracomment>
-        <translation>Demander un mot de passe pour chaque transaction</translation>
+        <translation>매 거래마다 비밀번호 물어보기</translation>
     </message>
     <message id="settings-report-problem-title">
         <source>Report problem</source>
         <extracomment>settings tab, report problem section, title</extracomment>
-        <translation>Signaler un problème</translation>
+        <translation>문제 신고하기</translation>
     </message>
     <message id="settings-wallet-location-label">
         <source>Wallet folder location</source>
         <extracomment>settings tab, general section, wallet data folder location label</extracomment>
-        <translation>Emplacement du fichier Portefeuille</translation>
+        <translation>지갑 폴더 위치</translation>
     </message>
     <message id="settings-apply">
         <source>Apply</source>
         <extracomment>settings tab, node section, apply button</extracomment>
-        <translation type="unfinished">Apply</translation>
+        <translation>적용하기</translation>
     </message>
     <message id="logo-description">
         <source>Scalable confidential cryptocurrency</source>
-        <translation>Crypto monnaie confidentielle et évolutive</translation>
+        <translation type="unfinished">Scalable confidential cryptocurrency</translation>
     </message>
     <message id="change-pwd-old-empty">
         <source>Please, enter old password</source>
-        <translation>Merci de saisir votre ancien mot de passe</translation>
+        <translation>옛날 비밀번호를 입력해주세요</translation>
     </message>
     <message id="change-pwd-new-empty">
         <source>Please, enter new password</source>
-        <translation>Merci d&apos;entrer un nouveau mot de passe</translation>
+        <translation>새로운 비밀번호를 입력해주세요</translation>
     </message>
     <message id="change-pwd-confirm-empty">
         <source>Please, confirm new password</source>
-        <translation>Merci de confirmer votre nouveau mot de passe</translation>
+        <translation>새로운 비밀번호를 확인해주세요</translation>
     </message>
     <message id="change-pwd-new-same-as-old">
         <source>New password cannot be the same as old</source>
-        <translation>Votre nouveau mot de passe ne peut pas être identitique à votre ancien mot de passe </translation>
+        <translation>새로운 비밀번호는 옛날 비밀번호와 같을 수 없습니다.</translation>
     </message>
     <message id="change-pwd-confirm-fail">
         <source>New password doesn&apos;t match the confirm password</source>
-        <translation>Le mot de passe que vous avez entré ne correspond pas à celui confirmé</translation>
+        <translation>새로운 비밀번호가 확인 비밀번호와 일치하지 않습니다</translation>
     </message>
     <message id="change-pwd-old-fail">
         <source>The old password you have entered is incorrect</source>
-        <translation>L&apos;ancien mot de passe que vous avez entré est incorrect</translation>
+        <translation>입력한 이전 비밀번호가 정확하지 않습니다</translation>
     </message>
     <message id="change-pwd-old-pwd-label">
         <source>Enter old password</source>
-        <translation>Entrer votre ancien mot de passe</translation>
+        <translation>옛날 비밀번호를 입력하세요</translation>
     </message>
     <message id="change-pwd-new-pwd-label">
         <source>Enter new password</source>
-        <translation>Entrer un nouveau mot de passe</translation>
+        <translation>새로운 비밀번호를 입력하세요</translation>
     </message>
     <message id="change-pwd-confirm-pwd-label">
         <source>Confirm new password</source>
-        <translation>Confirmer votre nouveau mot de passe</translation>
+        <translation>새로운 비밀번호를 확인하세요</translation>
     </message>
     <message id="change-pwd-ok">
         <source>Сhange password</source>
-        <translation type="unfinished">Сhange password</translation>
+        <translation>비밀번호 바꾸기</translation>
     </message>
     <message id="loading-loading">
         <source>Loading wallet...</source>
-        <translation>Chargement du portefeuille...</translation>
+        <translation>지갑 불러오는 중...</translation>
     </message>
     <message id="loading-restoring">
         <source>Restoring wallet...</source>
-        <translation>Restaurer le portefeuille...</translation>
+        <translation>지갑 복구하는중...</translation>
     </message>
     <message id="loading-creating">
         <source>Creating wallet...</source>
-        <translation>Création du portefeuille...</translation>
+        <translation>지갑 생성중...</translation>
     </message>
     <message id="start-open-pwd-invitation">
         <source>Enter your password to access the wallet</source>
-        <translation>Merci de saisir votre mot de passe pour accéder à votre portefeuille</translation>
+        <translation>지갑에 접근하려면 비밀번호를 입력하세요</translation>
     </message>
     <message id="open-show-wallet-button">
         <source>Show my wallet</source>
-        <translation type="unfinished">Show my wallet</translation>
+        <translation>내 지갑 보기</translation>
     </message>
     <message id="edit-addr-title">
         <source>Edit address</source>
         <extracomment>Edit addres dialog title</extracomment>
-        <translation type="unfinished">Edit address</translation>
+        <translation>주소 수정</translation>
     </message>
     <message id="edit-addr-addr-id">
         <source>Address ID</source>
         <extracomment>Edit addres dialog, address label</extracomment>
-        <translation>Identifiant adresse</translation>
+        <translation>주소 ID</translation>
     </message>
     <message id="edit-addr-save-button">
         <source>Save</source>
         <extracomment>Edit addres dialog, save button</extracomment>
-        <translation type="unfinished">Save</translation>
+        <translation>저장</translation>
     </message>
     <message id="payment-info-proof-verification">
         <source>Payment proof verification</source>
-        <translation>Vérification de la preuve de paiement</translation>
+        <translation>지불 증명 검증</translation>
     </message>
     <message id="payment-info-proof-label">
         <source>Paste your payment proof here</source>
-        <translation>Merci de copier et de coller votre preuve de paiement ici</translation>
+        <translation>당신의 지불 증명을 여기에 붙여넣기 하세요</translation>
     </message>
     <message id="payment-info-proof-decode-fail">
         <source>Cannot decode a proof, illegal sequence.</source>
-        <translation>Impossible de décoder une preuve, séquence illégale.</translation>
+        <translation>디코딩 할 수 없습니다. 잘못된 시퀀스입니다.</translation>
     </message>
     <message id="payment-info-proof-code-label">
         <source>Code</source>
-        <translation type="unfinished">Code</translation>
+        <translation>코드</translation>
     </message>
     <message id="payment-info-proof-sender-label">
         <source>Sender</source>
-        <translation type="unfinished">Sender</translation>
+        <translation>보내는 사람</translation>
     </message>
     <message id="payment-info-proof-receiver-label">
         <source>Receiver</source>
-        <translation type="unfinished">Receiver</translation>
+        <translation>받는 사람</translation>
     </message>
     <message id="payment-info-copy-details-button">
         <source>Copy details</source>
-        <translation type="unfinished">Copy details</translation>
+        <translation>세부사항 복사하기</translation>
     </message>
     <message id="payment-info-copy-code-button">
         <source>Copy code</source>
-        <translation type="unfinished">Copy code</translation>
+        <translation>코드 복사하기</translation>
     </message>
     <message id="secondary-panel-maturing">
         <source>Maturing</source>
@@ -464,94 +464,94 @@
     </message>
     <message id="info-title">
         <source>Info view</source>
-        <translation>Voir information</translation>
+        <translation>정보 보기</translation>
     </message>
     <message id="loading-change-settings-button">
         <source>Сhange settings</source>
-        <translation type="unfinished">Сhange settings</translation>
+        <translation>설정 변경</translation>
     </message>
     <message id="notifications-title">
         <source>Notifications view</source>
-        <translation>Voir notifications</translation>
+        <translation>알림 보기</translation>
     </message>
     <message id="status-connecting">
         <source>connecting</source>
-        <translation type="unfinished">connecting</translation>
+        <translation>연결중</translation>
     </message>
     <message id="status-online">
         <source>online</source>
-        <translation type="unfinished">online</translation>
+        <translation>온라인</translation>
     </message>
     <message id="status-updating">
         <source>updating</source>
-        <translation type="unfinished">updating</translation>
+        <translation>업데이트 중</translation>
     </message>
     <message id="tx-details-title">
         <source>General transaction info</source>
-        <translation>Information générale de la transaction</translation>
+        <translation>일반 거래 정보</translation>
     </message>
     <message id="tx-details-sending-addr-label">
         <source>Sending address</source>
-        <translation type="unfinished">Sending address</translation>
+        <translation>보내는 주소</translation>
     </message>
     <message id="tx-details-receiving-addr-label">
         <source>Receiving address</source>
-        <translation type="unfinished">Receiving address</translation>
+        <translation>받는 주소</translation>
     </message>
     <message id="tx-details-error-label">
         <source>Error</source>
-        <translation type="unfinished">Error</translation>
+        <translation>오류</translation>
     </message>
     <message id="settings-report-problem-save-log-button">
         <source>Save wallet logs</source>
         <extracomment>settings tab, report problem section, save logs button</extracomment>
-        <translation type="unfinished">Save wallet logs</translation>
+        <translation>지갑 로그 저장하기</translation>
     </message>
     <message id="settings-rescan-confirmation-message-line-2">
         <source>Are you sure?</source>
         <extracomment>settings tab, confirm rescan dialog additional message</extracomment>
-        <translation>Êtes-vous certain?</translation>
+        <translation>확실합니까?</translation>
     </message>
     <message id="settings-title">
         <source>Settings</source>
         <extracomment>settings tab title</extracomment>
-        <translation>Paramètres</translation>
+        <translation>설정</translation>
     </message>
     <message id="cant-send-to-expired-message">
         <source>Can&apos;t send to the expired address.</source>
-        <translation>Ne peut pas envoyer à l&apos;adresse expirée.</translation>
+        <translation>만료된 주소에는 보낼 수 없습니다.</translation>
     </message>
     <message id="send-confirmation-title">
         <source>Confirm transaction details</source>
-        <translation>Confirmer les détails de la transaction</translation>
+        <translation>거래 세부내역 확인</translation>
     </message>
     <message id="send-confirmation-recipient-label">
         <source>Recipient</source>
-        <translation type="unfinished">Recipient</translation>
+        <translation>받는 사람</translation>
     </message>
     <message id="send-confirmation-pwd-require-message">
         <source>To broadcast your transaction please enter your password</source>
-        <translation>Pour envoyer votre transaction, veuillez entrer votre mot de passe</translation>
+        <translation>거래를 전파하려면 비밀번호를 입력해주십시오</translation>
     </message>
     <message id="wallet-title">
         <source>Wallet</source>
-        <translation>Portefeuille</translation>
+        <translation>지갑</translation>
     </message>
     <message id="wallet-receive-title">
         <source>Receive Beam</source>
-        <translation>Recevoir Beam</translation>
+        <translation>Beam 받기</translation>
     </message>
     <message id="wallet-receive-my-addr-label">
         <source>My address</source>
-        <translation>Mon adresse</translation>
+        <translation>내 주소</translation>
     </message>
     <message id="wallet-receive-expires-label">
         <source>Expires</source>
-        <translation>Expire</translation>
+        <translation>만료</translation>
     </message>
     <message id="wallet-receive-expires-24">
         <source>24 hours</source>
-        <translation>24 heure</translation>
+        <translation>24 시간</translation>
     </message>
     <message id="wallet-receive-expires-never">
         <source>Never</source>
@@ -559,77 +559,76 @@
     </message>
     <message id="wallet-receive-qr-label">
         <source>Scan to send</source>
-        <translation>Scanner pour envoyer</translation>
+        <translation>스캔하여 보내기</translation>
     </message>
     <message id="wallet-receive-propogate-addr-message">
         <source>Send this address to the sender over an external secure channel</source>
-        <translation>Envoyez cette adresse à l&apos;expéditeur via un canal sécurisé externe</translation>
+        <translation>해당 주소를 외부의 보안 채널로 보내는 사람에게 보냅니다.</translation>
     </message>
     <message id="invalid-addr-got-it-button">
         <source>Got it</source>
-        <translation type="unfinished">Got it</translation>
+        <translation>네, 알겠습니다</translation>
     </message>
     <message id="send-title">
         <source>Send Beam</source>
-        <translation>Envoyer Beam</translation>
+        <translation>Beam 보내기</translation>
     </message>
     <message id="send-send-to-label">
         <source>Send To</source>
-        <translation type="unfinished">Send To</translation>
+        <translation>~~ 에게 보내기</translation>
     </message>
     <message id="send-contact-placeholder">
         <source>Please specify contact</source>
-        <translation>Merci de spécifier le contact</translation>
+        <translation>연락처를 명확히 하십시오</translation>
     </message>
     <message id="send-amount-label">
         <source>Transaction amount</source>
-        <translation>Montant de la transaction</translation>
+        <translation>거래량</translation>
     </message>
     <message id="send-founds-fail">
         <source>Insufficient funds: you would need %1 to complete the transaction</source>
-        <translation>Fonds insuffisants: vous auriez besoin de % 1 pour finaliser la transaction</translation>
+        <translation>자금이 부족합니다 : 거래를 완료하려면 %1 만큼의 자금이 필요합니다</translation>
     </message>
     <message id="send-fee-fail">
         <source>The minimum fee is %1 groth</source>
-        <translation type="unfinished">The minimum fee is %1 groth</translation>
+        <translation>최소 수수료는 %1 groth 입니다</translation>
     </message>
     <message id="send-curency-sub-name">
         <source>GROTH</source>
-        <translation type="unfinished">GROTH</translation>
+        <translation>GROTH</translation>
     </message>
     <message id="send-remaining-label">
         <source>Remaining</source>
-        <translation>Restant</translation>
+        <translation>남아있는</translation>
     </message>
     <message id="send-send-fail">
         <source>Address %1 is invalid</source>
-        <translation>L&apos;adresse %1 est invalide</translation>
+        <translation>주소 %1 는 유효하지 않습니다</translation>
     </message>
     <message id="start-restore-confirm-button">
         <source>I agree</source>
-        <translation>J&apos;accepte</translation>
+        <translation>동의합니다</translation>
     </message>
     <message id="start-restore-message-line">
         <source>You are trying to restore an existing Beam Wallet. Please notice that if you use your wallet on another device, your balance will be up to date, but  transaction history and addresses will be kept separately on each device.</source>
-        <translation>224/5000
-Vous essayez de restaurer un portefeuille Beam existant. Veuillez noter que si vous utilisez votre portefeuille sur un autre appareil, votre solde sera à jour, mais l&apos;historique et les adresses des transactions seront conservés séparément sur chaque appareil.</translation>
+        <translation type="unfinished">You are trying to restore an existing Beam Wallet. Please notice that if you use your wallet on another device, your balance will be up to date, but  transaction history and addresses will be kept separately on each device.</translation>
     </message>
     <message id="start-migration-message">
         <source>Your wallet will be migrated to v.</source>
-        <translation>Votre portefeuille sera migré vers v.</translation>
+        <translation>당신의 지갑은 v 으로 이전될 것입니다.</translation>
     </message>
     <message id="start-migration-button">
         <source>Start auto migration</source>
         <extracomment>migration screen, start auto migration button</extracomment>
-        <translation type="unfinished">Start auto migration</translation>
+        <translation>자동 이전을 시작합니다</translation>
     </message>
     <message id="start-select-db-thead-name">
         <source>Name</source>
-        <translation>Nom</translation>
+        <translation>이름</translation>
     </message>
     <message id="start-select-db-thead-size">
         <source>Size</source>
-        <translation>Taille</translation>
+        <translation>크기</translation>
     </message>
     <message id="kb-unit">
         <source>kb</source>
@@ -638,279 +637,279 @@ Vous essayez de restaurer un portefeuille Beam existant. Veuillez noter que si v
     <message id="start-select-db-thead-modified">
         <source>Date modified</source>
         <extracomment>start screen, select db for migration, Date modified column title</extracomment>
-        <translation>Date modifiée</translation>
+        <translation>데이터가 수정됨</translation>
     </message>
     <message id="start-create-new-message-line-1">
         <source>Create new wallet with generating seed phrase.</source>
-        <translation>Créez un nouveau portefeuille avec une phrase clé générée.</translation>
+        <translation>시드 구문 생성하고 새로운 지갑을 만드십시오</translation>
     </message>
     <message id="start-create-new-message-line-2">
         <source>If you ever lose your device, you will need this phrase to recover your wallet!</source>
-        <translation>Si vous perdez votre appareil, vous aurez besoin de cette phrase pour récupérer votre portefeuille!</translation>
+        <translation>만약 기기를 잃어버렸다면, 해당 구문이 지갑 복구를 하는데 필요할 것입니다!</translation>
     </message>
     <message id="start-create-new-securiry-note-1">
         <source>Do not let anyone see your seed phrase</source>
-        <translation>Ne laissez personne voir votre phrase clé</translation>
+        <translation>아무에게도 당신의 시드 구문을 보여주지 마세요</translation>
     </message>
     <message id="start-create-new-securiry-note-2">
         <source>Never type your seed phrase into password managers or elsewhere</source>
-        <translation>Ne jamais sauvegarder votre phrase clé dans des gestionnaires de mots de passe ou ailleurs</translation>
+        <translation>절대로 시드 구문을 비밀번호 관리자나 다른 곳에 절대로 적어놓지 마십시오</translation>
     </message>
     <message id="start-create-new-securiry-note-3">
         <source>Keep the copies of your seed phrase in a safe place</source>
-        <translation>Conservez les copies de votre phrase clé dans un endroit sûr</translation>
+        <translation>시드 구문을 안전한 곳에 보관하세요</translation>
     </message>
     <message id="start-generate-seed-phrase-button">
         <source>Generate seed phrase</source>
-        <translation type="unfinished">Generate seed phrase</translation>
+        <translation>시드 구문 생성하기</translation>
     </message>
     <message id="start-generate-seed-phrase-message">
         <source>Your seed phrase is the access key to all the cryptocurrencies in your wallet. Write down the phrase to keep it in a safe or in a locked vault. Without the phrase you will not be able to recover your money.</source>
-        <translation>Votre phrase clé est le moyen d&apos;accéder à toutes les monnaies cryptées de votre portefeuille. Ecrivez la phrase pour la garder dans un coffre-fort ou dans un coffre-fort verrouillé. Sans cette phrase, vous ne pourrez pas récupérer votre argent.</translation>
+        <translation>당신의 시드 구문은 지갑과 연동된 모든 암호화폐에 접근할 수 있는 키입니다. 구문을 받아 적어놓고 안전한 곳에 보관하십시오. 구문 없이는 자금을 복구할 수 없습니다.</translation>
     </message>
     <message id="start-confirm-seed-phrase-button">
         <source>I understand</source>
-        <translation>Je comprends</translation>
+        <translation>이해합니다</translation>
     </message>
     <message id="start-confirm-seed-phrase-message">
         <source>It is strictly recommended to write down the seed phrase on a paper. Storing it in a file makes it prone to cyber attacks and, therefore, less secure.</source>
-        <translation>Il est strictement recommandé d&apos;écrire la phrase clé sur une feuille de papier. Le stockage dans un fichier le rend vulnérable aux cyberattaques et, par conséquent, moins sécurisé.</translation>
+        <translation>시드 구문을 종이에 써놓는 것을 강력하게 권고합니다. 파일로 저장하면 사이버 공격의 표적이 될 수 있고 보안성이 약화됩니다.</translation>
     </message>
     <message id="start-check-seed-phrase-message">
         <source>To ensure the seed phrase is written down, please fill-in the specific words below</source>
-        <translation>Pour vous assurer que la phrase-clé est bien écrite, veuillez compléter les mots ci-dessous</translation>
+        <translation>시드 구문을 똑바로 적었는지 확인하기 위해서, 아래에 특정 단어들을 채워 넣어주세요</translation>
     </message>
     <message id="start-restore-message">
         <source>Type in or paste your seed phrase</source>
-        <translation>Saisir ou copier votre phrase clé</translation>
+        <translation>당신의 시드 구문을 적거나 붙여넣기 하세요</translation>
     </message>
     <message id="start-create-pwd-message">
         <source>Create password to access your wallet</source>
-        <translation>Créer un mot de passe pour accéder à votre portefeuille</translation>
+        <translation>지갑에 접근하기 위해서 비밀번호를 생성해야합니다.</translation>
     </message>
     <message id="start-pwd-label">
         <source>Password</source>
-        <translation>Mot de passe</translation>
+        <translation>비밀번호</translation>
     </message>
     <message id="start-create-pwd-confirm-label">
         <source>Confirm password</source>
-        <translation>Confirmer votre nouveau mot de passe</translation>
+        <translation>비밀번호 확인하기</translation>
     </message>
     <message id="start-create-pwd-not-match-error">
         <source>Passwords do not match</source>
-        <translation>Les mots de passe de correspondent pas</translation>
+        <translation>비밀번호가 일치하지 않습니다.</translation>
     </message>
     <message id="start-node-title">
         <source>Setup node connectivity</source>
-        <translation>Configurer la connectivité des noeuds</translation>
+        <translation>노드 연결 설정</translation>
     </message>
     <message id="start-node-integrated-radio">
         <source>Run integrated node (recommended)</source>
-        <translation>Exécuter le noeud intégré (recommandé)</translation>
+        <translation>integrated 노드 실행하기(추천)</translation>
     </message>
     <message id="start-node-port-label">
         <source>Enter port to listen</source>
-        <translation>Entrez le port pour écouter</translation>
+        <translation>포트를 열고 통신하십시오</translation>
     </message>
     <message id="start-node-peer-label">
         <source>Peer</source>
-        <translation>Paire</translation>
+        <translation>피어</translation>
     </message>
     <message id="start-node-random-radio">
         <source>Connect to random remote node</source>
-        <translation>Connect to random remote node</translation>
+        <translation>임의의 원격 노드에 연결하기</translation>
     </message>
     <message id="start-node-remote-radio">
         <source>Connect to specific remote node</source>
-        <translation>Se connecter à un nœud distant spécifique</translation>
+        <translation>특정 원격 노드에 연결하기</translation>
     </message>
     <message id="start-node-port-empty-error">
         <source>Please specify port</source>
-        <translation>Veuillez spécifier le numéro de port sur lequel écouter</translation>
+        <translation>피어를 명확히 하십시오</translation>
     </message>
     <message id="start-node-port-value-error">
         <source>Port must be a number between 1 and 65535</source>
-        <translation>Le port doit être un nombre compris entre 1 et 65535</translation>
+        <translation>포트는 1 부터 65535 사이의 숫자만 가능합니다</translation>
     </message>
     <message id="start-node-peer-empty-error">
         <source>Please specify peer</source>
-        <translation>Merci de spécifier la paire</translation>
+        <translation>피어를 명확히 하십시오</translation>
     </message>
     <message id="start-node-peer-error">
         <source>Incorrect address</source>
-        <translation>Merci de spécifier une paire correcte</translation>
+        <translation>정확하지 않은 주소</translation>
     </message>
     <message id="start-node-empty-error">
         <source>Please specify address of the remote node</source>
-        <translation>Merci de spécifier l&apos;adresse du noeud distant</translation>
+        <translation>원격 노드의 주소를 명확히 하십시오</translation>
     </message>
     <message id="appmodel-failed-start-node">
         <source>Failed to start node. Please check your node configuration</source>
-        <translation type="unfinished">Failed to start node. Please check your node configuration</translation>
+        <translation>노드 시작을 실패했습니다. 노드 구성을 확인하십시오</translation>
     </message>
     <message id="wallet-model-node-protocol-error">
         <source>Node protocol error!</source>
-        <translation>Erreur de protocole de noeud!</translation>
+        <translation>노드 프로토콜 오류!</translation>
     </message>
     <message id="wallet-model-incompatible-peer-error">
         <source>You are trying to connect to incompatible peer.</source>
-        <translation>Vous essayez de vous connecter à un noeud incompatible.</translation>
+        <translation>호환되지 않는 노드에 연결 시도를 하고 있습니다.</translation>
     </message>
     <message id="wallet-model-connection-base-error">
         <source>Connection error</source>
-        <translation>Erreur de connexion</translation>
+        <translation>연결 오류</translation>
     </message>
     <message id="wallet-model-connection-time-out-error">
         <source>Connection timed out</source>
-        <translation>La connexion a expiré</translation>
+        <translation>연결 시간 초과</translation>
     </message>
     <message id="wallet-model-connection-refused-error">
         <source>Cannot connect to node</source>
-        <translation type="unfinished">Cannot connect to node</translation>
+        <translation>노드에 연결할 수 없습니다.</translation>
     </message>
     <message id="wallet-model-connection-host-unreach-error">
         <source>Node is unreachable</source>
-        <translation type="unfinished">Node is unreachable</translation>
+        <translation>노드에 연결할 수 없습니다</translation>
     </message>
     <message id="wallet-model-connection-addr-in-use-error">
         <source>The port %1 is already in use. Check if a wallet is already running on this machine or change the port settings.</source>
-        <translation>Le port% 1 est déjà utilisé. Vérifiez si un portefeuille est déjà en cours d&apos;exécution sur cette machine ou modifiez les paramètres du port.</translation>
+        <translation>포트 %1은 이미 사용중입니다. 이미 이 기계에서 지갑이 작동하고 있는지 확인하거나 포트 설정을 바꾸십시오</translation>
     </message>
     <message id="wallet-model-time-sync-error">
         <source>System time not synchronized</source>
-        <translation>Heure du système non synchronisée</translation>
+        <translation>시스템 시간이 동기화되어 있지 않습니다</translation>
     </message>
     <message id="wallet-model-host-unresolved-error">
         <source>Incorrect node name or no Internet connection.</source>
-        <translation>Nom de noeud incorrect ou pas de connexion Internet.</translation>
+        <translation>옳지 않은 노드 이름이거나 인터넷 연결이 안되어있습니다</translation>
     </message>
     <message id="wallet-model-undefined-error">
         <source>Unexpected error!</source>
-        <translation>Erreur inattendue!</translation>
+        <translation>예상되지 않은 오류!</translation>
     </message>
     <message id="wallet-model-data-location-error">
         <source>Failed to start wallet. Please check your wallet data location</source>
-        <translation>Impossible de démarrer le portefeuille. Veuillez vérifier l&apos;emplacement des données de votre portefeuille</translation>
+        <translation>지갑을 실행하지 못했습니다. 지갑 데이터 위치를 확인하십시오</translation>
     </message>
     <message id="loading-view-download-blocks">
         <source>Downloading blocks</source>
-        <translation>Blocs en cours de téléchargement</translation>
+        <translation>블록 다운로딩중</translation>
     </message>
     <message id="loading-view-scaning-utxo">
         <source>Scanning UTXO %d/%d</source>
-        <translation>En cours de scan de l&apos;UTXO</translation>
+        <translation>UTXO %d/%d 스캔하는중</translation>
     </message>
     <message id="loading-view-protocol-error">
         <source>Incompatible peer</source>
-        <translation>Paire incompatible</translation>
+        <translation>호환되지 않는 피어</translation>
     </message>
     <message id="loading-view-connection-error">
         <source>Connection error</source>
-        <translation type="unfinished">Connection error</translation>
+        <translation>연결 오류</translation>
     </message>
     <message id="start-view-printer-not-found-error">
         <source>Printer is not found. Please, check your printer preferences.</source>
-        <translation>L&apos;imprimante ne peut être localisée. Merci de vérifier les préférences de votre imprimante.</translation>
+        <translation>프린터 검색이 안되었습니다. 프린터 설정을 확인하십시오.</translation>
     </message>
     <message id="start-view-printer-error">
         <source>Failed to print seed phrase. Please, check your printer.</source>
-        <translation>L&apos;impression de votre phrase clé a echoué. Merci de vérifier votre imprimante.</translation>
+        <translation>시드 구문 복사에 실패하였습니다. 프린터를 확인하십시오.</translation>
     </message>
     <message id="start-view-db-file-filter">
         <source>SQLite database file (*.db)</source>
-        <translation>SQLite database file (*.db)</translation>
+        <translation>SQLite 데이터베이스 파일(*.db)</translation>
     </message>
     <message id="status-bar-view-not-connected">
         <source>Wallet is not connected to the node</source>
-        <translation>Le portefeuille n&apos;est pas connecté au noeud</translation>
+        <translation>지갑이 노드에 연결되지 않았습니다</translation>
     </message>
     <message id="tx-failture-undefined">
         <source>Unexpected reason, please send wallet logs to Beam support</source>
-        <translation>Raison inattendue, veuillez envoyer les logs du portefeuille au service clientèle de Beam</translation>
+        <translation>예상되지 않은 이유, 지갑 로그를 Beam support 에 보내십시오</translation>
     </message>
     <message id="tx-failture-cancelled">
         <source>Transaction cancelled</source>
-        <translation>Transaction annulée</translation>
+        <translation>거래가 취소됨</translation>
     </message>
     <message id="tx-failture-receiver-signature-invalid">
         <source>Receiver signature in not valid, please send wallet logs to Beam support</source>
-        <translation>La signature du destinataire n&apos;est pas valide, veuillez envoyer les logs du portefeuille au service clientèle de Beam</translation>
+        <translation>받는 사람의 서명이 유효하지 않습니다, Beam support 에 지갑 로그를 보내십시오</translation>
     </message>
     <message id="tx-failture-not-registered-in-blockchain">
         <source>Failed to register transaction with the blockchain, see node logs for details</source>
-        <translation>Échec d&apos;enregistrement de la transaction sur la Blockchain, voir les logs de nœuds pour plus de détails</translation>
+        <translation>거래를 블록체인에 등록하지 못했습니다, 자세한 내용은 노드 로그를 확인하세요</translation>
     </message>
     <message id="tx-failture-not-valid">
         <source>Transaction is not valid, please send wallet logs to Beam support</source>
-        <translation>La transaction n&apos;est pas valide, veuillez envoyer les logs du portefeuille au service clientèle de Beam</translation>
+        <translation>거래가 유효하지 않습니다, Beam support 에 지갑 로그를 보내십시오</translation>
     </message>
     <message id="tx-failture-kernel-invalid">
         <source>Invalid kernel proof provided</source>
-        <translation>La preuve du kernel est invalide</translation>
+        <translation>유효하지 않은 커널 증명이 제공되었습니다.</translation>
     </message>
     <message id="tx-failture-parameters-not-sended">
         <source>Failed to send Transaction parameters</source>
-        <translation>L&apos;envoi des paramètres de transaction a échoué</translation>
+        <translation>거래 파라미터 전송 실패</translation>
     </message>
     <message id="tx-failture-no-inputs">
         <source>No inputs</source>
-        <translation>Pas d&apos;entrée</translation>
+        <translation>input 값이 없습니다</translation>
     </message>
     <message id="tx-failture-addr-expired">
         <source>Address is expired</source>
-        <translation>L&apos;adresse a expiré</translation>
+        <translation>주소가 만료되었습니다.</translation>
     </message>
     <message id="tx-failture-parameters-not-readed">
         <source>Failed to get transaction parameters</source>
-        <translation>Impossible d&apos;obtenir les paramètres de transaction</translation>
+        <translation>거래 파라미터 수신 실패</translation>
     </message>
     <message id="tx-failture-time-out">
         <source>Transaction timed out</source>
-        <translation>La connexion a expiré</translation>
+        <translation>거래 시간 초과</translation>
     </message>
     <message id="tx-failture-not-signed-by-receiver">
         <source>Payment not signed by the receiver, please send wallet logs to Beam support</source>
-        <translation>Le paiement n&apos;a pas été signé par le récipiendaire, merci d&apos;envoyer les logs du portefeuille au service clientèle de Beam</translation>
+        <translation>수신자가 지불에 서명하지 않았습니다, 지갑 로그를 Beam support 에 보내십시오</translation>
     </message>
     <message id="tx-failture-max-height-to-high">
         <source>Kernel maximum height is too high</source>
-        <translation>La hauteur maximale du Kernel est trop haute</translation>
+        <translation>커널 최대 높이가 너무 큽니다</translation>
     </message>
     <message id="tx-failture-invalid-state">
         <source>Transaction has invalid state</source>
-        <translation>L&apos;état de la transaction est invalide</translation>
+        <translation>거래가 유효하지 않은 상태이다</translation>
     </message>
     <message id="tx-curency-name">
         <source>BEAM</source>
-        <translation type="unfinished">BEAM</translation>
+        <translation>BEAM</translation>
     </message>
     <message id="tx-curency-sub-name">
         <source>groths</source>
-        <translation>groths</translation>
+        <translation>GROTH</translation>
     </message>
     <message id="utxo-utxo">
         <source>UTXO</source>
-        <translation type="unfinished">UTXO</translation>
+        <translation>UTXO</translation>
     </message>
     <message id="utxo-blockchain-height">
         <source>Blockchain Height</source>
-        <translation>Hauteur de la blockchain</translation>
+        <translation>블록체인 높이</translation>
     </message>
     <message id="utxo-last-block-hash">
         <source>Last block hash</source>
-        <translation>Dernier hash du bloc</translation>
+        <translation>마지막 블록 해시</translation>
     </message>
     <message id="utxo-head-maturity">
         <source>Maturity</source>
-        <translation>Maturité</translation>
+        <translation type="unfinished">Maturity</translation>
     </message>
     <message id="utxo-head-type">
         <source>Type</source>
-        <translation>Type</translation>
+        <translation>타입</translation>
     </message>
     <message id="utxo-status-available">
         <source>Available</source>
-        <translation type="unfinished">Available</translation>
+        <translation>가능함</translation>
     </message>
     <message id="utxo-status-maturing">
         <source>Maturing%1(till block height %2)</source>
@@ -922,19 +921,19 @@ Vous essayez de restaurer un portefeuille Beam existant. Veuillez noter que si v
     </message>
     <message id="utxo-status-outgoing">
         <source>In progress%1(outgoing)</source>
-        <translation type="unfinished">In progress%1(outgoing)</translation>
+        <translation>진행중%1(발신중)</translation>
     </message>
     <message id="utxo-status-change">
         <source>In progress%1(change)</source>
-        <translation type="unfinished">In progress%1(change)</translation>
+        <translation>진행중%1(변경중)</translation>
     </message>
     <message id="utxo-status-incoming">
         <source>In progress%1(incoming)</source>
-        <translation type="unfinished">In progress%1(incoming)</translation>
+        <translation>진행중%1(수신중)</translation>
     </message>
     <message id="utxo-status-spent">
         <source>Spent</source>
-        <translation type="unfinished">Spent</translation>
+        <translation>사용됨</translation>
     </message>
     <message id="settings-general-lock-screen-never">
         <source>Never</source>
@@ -942,139 +941,139 @@ Vous essayez de restaurer un portefeuille Beam existant. Veuillez noter que si v
     </message>
     <message id="settings-general-lock-screen-1m">
         <source>1 minute</source>
-        <translation>1 minute</translation>
+        <translation>1분</translation>
     </message>
     <message id="settings-general-lock-screen-5m">
         <source>5 minutes</source>
-        <translation>5 minutes</translation>
+        <translation>5분</translation>
     </message>
     <message id="settings-general-lock-screen-15m">
         <source>15 minutes</source>
-        <translation>15 minutes</translation>
+        <translation>15분</translation>
     </message>
     <message id="settings-general-lock-screen-30m">
         <source>30 minutes</source>
-        <translation>30 minutes</translation>
+        <translation>30분</translation>
     </message>
     <message id="settings-general-lock-screen-1h">
         <source>1 hour</source>
-        <translation>1 heure</translation>
+        <translation>1 시간</translation>
     </message>
     <message id="receive-amount-label">
         <source>Receive amount (optional)</source>
-        <translation>Recevoir le montant (facultatif)</translation>
+        <translation>받는 양 (선택)</translation>
     </message>
     <message id="tx-details-tx-id-label">
         <source>Transaction ID</source>
-        <translation type="unfinished">Transaction ID</translation>
+        <translation>거래 ID</translation>
     </message>
     <message id="appmodel-failed-time-not-synced">
         <source>Failed to start the integrated node: the timezone settings of your machine are out of sync. Please fix them and restart the wallet.</source>
-        <translation>Échec du démarrage du nœud intégré: les paramètres de fuseau horaire de votre machine sont désynchronisés. Veuillez les modifier et redémarrer le portefeuille.</translation>
+        <translation type="unfinished">Failed to start the integrated node: the timezone settings of your machine are out of sync. Please fix them and restart the wallet.</translation>
     </message>
     <message id="can-not-generate-new-address-message">
         <source>You cannot generate new address. Your wallet doesn&apos;t have a master key.</source>
-        <translation>Vous ne pouvez pas générer de nouvelle adresse. Votre portefeuille n’a pas de clé principale.</translation>
+        <translation>새로운 주소를 생성할 수 없습니다. 당신의 지갑에는 마스터 키가 없습니다.</translation>
     </message>
     <message id="settings-general-language">
         <source>Language</source>
         <extracomment>settings tab, general section, language label</extracomment>
-        <translation>Langue</translation>
+        <translation>언어</translation>
     </message>
     <message id="open-external-open">
         <source>Open</source>
-        <translation type="unfinished">Open</translation>
+        <translation>열기</translation>
     </message>
     <message id="open-external-title">
         <source>External link</source>
-        <translation>Lien externe</translation>
+        <translation>외부 링크</translation>
     </message>
     <message id="open-external-message">
         <source>Beam Wallet app requires permission to open external link in the browser. This action will expose your IP to the web server. To avoid it, choose -Cancel-. You can chage your choice in app setting anytime.</source>
-        <translation>L&apos;application Beam Wallet nécessite l&apos;autorisation d&apos;ouvrir un lien externe dans le navigateur. Cette action exposera votre adresse IP au serveur Web. Pour l&apos;éviter, choisissez -Annuler-. Vous pouvez modifier votre choix dans les paramètres de l&apos;application à tout moment.</translation>
+        <translation>Beam 지갑 앱은 브라우저에서 외부 링크를 열 수 있는 권한이 필요합니다. 이를 수행하면 당신의 IP 주소가 웹 서버에 노출 될 것입니다. 원하지 않는다면 -취소- 를 선택하십시오. 설정에서 언제든지 변경할 수 있습니다.</translation>
     </message>
     <message id="start-open-change-wallet-message">
         <source>If you&apos;ll restore a wallet all transaction history and addresses will be lost.</source>
-        <translation>Si vous restaurez un portefeuille, l&apos;historique et les adresses des transactions seront perdus.</translation>
+        <translation>만약 지갑을 복구한다면 모든 거래 내역과 주소들이 사라질 것입니다.</translation>
     </message>
     <message id="loading-restore-message-line1">
         <source>Please wait for synchronization and do not close or minimize the application.</source>
-        <translation>Veuillez attendre la synchronisation et ne pas fermer ni réduire l&apos;application.</translation>
+        <translation>동기화가 될 때까지 어플리케이션을 닫거나 최소화하지 마시오.</translation>
     </message>
     <message id="loading-restore-message-line2">
         <source>Only the wallet balance (UTXO) can be restored, transaction info and addresses are always private and never kept in the blockchain.</source>
-        <translation>Seul le solde du portefeuille (UTXO) peut être restauré. Les informations et adresses de transaction sont toujours privées et ne sont jamais conservées sur la blockchain.</translation>
+        <translation>오직 지갑 잔고(UTXO)만 복구됩니다, 주소들은 항상 비공개이고 블록체인 상에 절대 저장되지 않습니다.</translation>
     </message>
     <message id="start-recovery-title">
         <source>Create new password</source>
-        <translation>Entrer un nouveau mot de passe</translation>
+        <translation>새로운 비밀번호 만들기</translation>
     </message>
     <message id="start-recovery-pwd-message">
         <source>Create new password to access your wallet</source>
-        <translation>Créer un mot de passe pour accéder à votre portefeuille</translation>
+        <translation>지갑에 접근하기 위해서 새 비밀번호를 생성해야합니다.</translation>
     </message>
     <message id="start-create-pwd-strength-message">
         <source>Strong password needs to meet the following requirements:\n•  the length must be at least 10 characters\n•  must contain at least one lowercase letter\n•  must contain at least one uppercase letter\n•  must contain at least one number</source>
-        <translation>Un mot de passe sécurisé doit remplir les conditions suivantes: \ n • la longueur doit être au moins de 10 caractères \ n • doit contenir au moins une lettre minuscule \ n • doit contenir au moins une lettre majuscule \ n • doit contenir au moins un chiffre</translation>
+        <translation>보안성이 강한 비밀번호를 만들기 위해서는 아래의 조건들을 충족시켜야 합니다 : \n• 최소한 10개의 글자로 이루어져야합니다.\n• 최소한 1개의 소문자가 포함되어야 합니다.\n• 최소한 1개의 대문자가 포함되어야 합니다.\n• 최소한 1개의 숫자가 포함되어야 합니다.</translation>
     </message>
     <message id="start-open-caps-warning">
         <source>Caps lock is on!</source>
-        <translation>Touche Maj activée!</translation>
+        <translation>Caps lock 이 켜져 있습니다!</translation>
     </message>
     <message id="show-qr-title">
         <source>QR code</source>
         <extracomment>show QR dialog title</extracomment>
-        <translation>Code QR</translation>
+        <translation>QR 코드</translation>
     </message>
     <message id="show-qr-tx-token-label">
         <source>Your address</source>
         <extracomment>show qr dialog address label</extracomment>
-        <translation type="unfinished">Your address</translation>
+        <translation>주소</translation>
     </message>
     <message id="show-qr-message">
         <source>Scan this QR code or send this address to the sender over secure channel</source>
         <extracomment>show QR dialog message, how to use this QR</extracomment>
-        <translation>Scannez ce code QR ou envoyez cette adresse à l&apos;expéditeur via un canal sécurisé</translation>
+        <translation>QR 코드를 스캔하거나 해당 주소를 보안 채널을 통해 보내는 사람에게 보내십시오</translation>
     </message>
     <message id="settings-peers-title">
         <source>Peers</source>
         <extracomment>settings tab, node section, peers label</extracomment>
-        <translation>Paires</translation>
+        <translation>피어</translation>
     </message>
     <message id="settings-node-title">
         <source>Node</source>
         <extracomment>settings tab, node section, title</extracomment>
-        <translation>Noeud</translation>
+        <translation>노드</translation>
     </message>
     <message id="settings-general-allow-beammw-label">
         <source>Allow access to %1 and %2 (to fetch exchanges and transaction data)</source>
         <extracomment>general settings, label for alow open external links</extracomment>
-        <translation type="unfinished">Allow access to %1 and %2 (to fetch exchanges and transaction data)</translation>
+        <translation>%1와 %2에게 접근을 허용합니다(거래 및 거래 데이터 가져오기)</translation>
     </message>
     <message id="settings-report-problem-message-l0">
         <source>To report a problem:</source>
-        <translation type="unfinished">To report a problem:</translation>
+        <translation>문제 신고하기:</translation>
     </message>
     <message id="settings-report-problem-message-l1">
         <source>1. Click “Save wallet logs” and choose a destination folder for log archive</source>
-        <translation type="unfinished">1. Click “Save wallet logs” and choose a destination folder for log archive</translation>
+        <translation>1. &quot;지갑 로그 저장하기&quot; 를 누르고 로그를 저장할 폴더를 선택하십시오</translation>
     </message>
     <message id="settings-report-problem-message-l2">
         <source>2. Send email to %1 or open a ticket in %2</source>
-        <translation type="unfinished">2. Send email to %1 or open a ticket in %2</translation>
+        <translation>2. %1에게 이메일을 보내거나 %2에서 티켓을 여십시오</translation>
     </message>
     <message id="settings-report-problem-message-l3">
         <source>3. Don’t forget to attach logs archive</source>
-        <translation type="unfinished">3. Don’t forget to attach logs archive</translation>
+        <translation>3. 로그 아카이브에 첨부하는 것을 잊지 마십시오</translation>
     </message>
     <message id="explorer">
         <source>blockchain explorer</source>
-        <translation type="unfinished">blockchain explorer</translation>
+        <translation>블록체인 탐색기</translation>
     </message>
     <message id="edit-addr-24-option">
         <source>In 24 hours from now</source>
         <extracomment>Edit address dialog, expiration option, in 24 hours from now</extracomment>
-        <translation type="unfinished">In 24 hours from now</translation>
+        <translation>지금부터 24시간</translation>
     </message>
     <message id="edit-addr-never-option">
         <source>Never</source>
@@ -1084,32 +1083,32 @@ Vous essayez de restaurer un portefeuille Beam existant. Veuillez noter que si v
     <message id="edit-addr-as-is-option">
         <source>Within 24 hours</source>
         <extracomment>Edit address dialog, expiration option, do not change</extracomment>
-        <translation type="unfinished">Within 24 hours</translation>
+        <translation>24시간 이내</translation>
     </message>
     <message id="edit-addr-expires-label">
         <source>Expires</source>
         <extracomment>Edit addres dialog, expires label</extracomment>
-        <translation type="unfinished">Expires</translation>
+        <translation>만료</translation>
     </message>
     <message id="edit-addr-expire-now-label">
         <source>Now</source>
         <extracomment>Edit addres dialog, expire now label</extracomment>
-        <translation type="unfinished">Now</translation>
+        <translation>현재</translation>
     </message>
     <message id="edit-addr-expire-now-switch">
         <source>Expire address now</source>
         <extracomment>Edit addres dialog, expire now switch</extracomment>
-        <translation>Expiration de l&apos;adresse maintenant</translation>
+        <translation>주소 만료시키기</translation>
     </message>
     <message id="edit-addr-expiration-time-label">
         <source>Expired on </source>
         <extracomment>Edit addres dialog, expiration time label</extracomment>
-        <translation>Expiré le </translation>
+        <translation>~~ 만료됨</translation>
     </message>
     <message id="edit-addr-activate-addr-switch">
         <source>Activate address</source>
         <extracomment>Edit addres dialog, expiration time label</extracomment>
-        <translation>Activer l&apos;adresse</translation>
+        <translation>주소 활성화</translation>
     </message>
     <message id="time-never">
         <source>Never</source>
@@ -1119,32 +1118,32 @@ Vous essayez de restaurer un portefeuille Beam existant. Veuillez noter que si v
     <message id="start-pwd-difficulty-very-weak">
         <source>Very weak password</source>
         <extracomment>set passwort, difficulty message, very weak</extracomment>
-        <translation>Mot de passe particulièrement faible</translation>
+        <translation>보안이 매우 약한 비밀번호</translation>
     </message>
     <message id="start-pwd-difficulty-weak">
         <source>Weak password</source>
         <extracomment>set passwort, difficulty message, weak</extracomment>
-        <translation>Faible mot de passe</translation>
+        <translation>보안이 약한 비밀번호</translation>
     </message>
     <message id="start-pwd-difficulty-medium">
         <source>Medium strength password</source>
         <extracomment>set passwort, difficulty message, medium</extracomment>
-        <translation>Mot de passe de force moyenne</translation>
+        <translation>중간 수준 보안의 비밀번호</translation>
     </message>
     <message id="start-pwd-difficulty-strong">
         <source>Strong password</source>
         <extracomment>set passwort, difficulty message, strong</extracomment>
-        <translation>Mot de passe fort</translation>
+        <translation>보안이 강한 비밀번호</translation>
     </message>
     <message id="start-pwd-difficulty-very-strong">
         <source>Very strong password</source>
         <extracomment>set passwort, difficulty message, very strong</extracomment>
-        <translation>Mot de passe très fort</translation>
+        <translation>보안이 매우 강한 비밀번호</translation>
     </message>
     <message id="start-migration-select-file-button">
         <source>Select wallet database file manually</source>
         <extracomment>migration screen, select db file button</extracomment>
-        <translation type="unfinished">Select wallet database file manually</translation>
+        <translation>지갑 데이터베이스 파일을 수동으로 선택하십시오</translation>
     </message>
     <message id="start-select-db-best-match-label">
         <source>(best match)</source>
@@ -1154,17 +1153,17 @@ Vous essayez de restaurer un portefeuille Beam existant. Veuillez noter que si v
     <message id="start-select-db-thead-created">
         <source>Date created</source>
         <extracomment>start screen, select db for migration, Date created column title</extracomment>
-        <translation type="unfinished">Date created</translation>
+        <translation>생성된 날짜</translation>
     </message>
     <message id="settings-general-require-pwd-to-spend-confirm-pwd-title">
         <source>Don’t ask password on every Send</source>
         <extracomment>settings tab, general section, ask password to send, confirm password dialog, title</extracomment>
-        <translation type="unfinished">Don’t ask password on every Send</translation>
+        <translation>매 전송마다 비밀번호 입력하지 않기</translation>
     </message>
     <message id="settings-general-require-pwd-to-spend-confirm-pwd-message">
         <source>Password verification is required to change that setting</source>
         <extracomment>settings tab, general section, ask password to send, confirm password dialog, message</extracomment>
-        <translation type="unfinished">Password verification is required to change that setting</translation>
+        <translation>설정 바꾸기를 하려면 비밀번호 검증이 필요합니다</translation>
     </message>
 </context>
 </TS>
