@@ -125,7 +125,7 @@ namespace
         WALLET_CHECK(coins[0].m_status == Coin::Available);
         WALLET_CHECK(senderWalletDB->getTxHistory().empty());
 
-        TestNode node;
+        TestNode node(100501);
         TestWalletRig sender("sender", senderWalletDB, [](auto) { io::Reactor::get_Current().stop(); });
         helpers::StopWatch sw;
 
@@ -1553,22 +1553,28 @@ void TestHWWallet()
         {
             Oracle oracle;
             oracle << 0u;
+            oracle << pt;
             LOG_INFO() << "rp.IsValid(): " << rp.IsValid(comm, oracle, &hGen);
         }
 
         {
             Oracle oracle;
             oracle << 0u;
+            oracle << pt;
             WALLET_CHECK(rp.IsValid(comm, oracle, &hGen));
         }
     });
 
     {
+        Height scheme = 100500;
+        io::Reactor::Ptr mainReactor{ io::Reactor::create() };
+        io::Reactor::Scope scope(*mainReactor);
         TrezorKeyKeeper tk;
+        LocalPrivateKeyKeeper lpkk(createSqliteWalletDB());
         IPrivateKeyKeeper& pkk = tk;
         ECC::Point::Native comm2;
-        auto outputs = pkk.GenerateOutputsSync(0, { kidv });
-        WALLET_CHECK(outputs[0]->IsValid(0, comm2));
+        auto outputs = pkk.GenerateOutputsSync(scheme, { kidv });
+        WALLET_CHECK(outputs[0]->IsValid(scheme, comm2));
     }
 
     // test transaction sign with local key keeper
@@ -1597,7 +1603,7 @@ int main()
 #endif
     auto logger = beam::Logger::create(logLevel, logLevel);
     Rules::get().FakePoW = true;
-	Rules::get().pForks[1].m_Height = 100500; // needed for lightning network to work
+    Rules::get().pForks[1].m_Height = 100500; // needed for lightning network to work
     Rules::get().UpdateChecksum();
 
 	//TestNegotiation();
@@ -1614,7 +1620,7 @@ int main()
 
  //   TestSplitTransaction();
 
-    //TestTxToHimself();
+    TestTxToHimself();
 
     ////TestExpiredTransaction();
 

@@ -810,10 +810,10 @@ struct TestNodeNetwork
 class TestNode
 {
 public:
-    TestNode()
+    TestNode(Height height=145)
     {
         m_Server.Listen(io::Address::localhost().port(32125));
-        while (m_Blockchain.m_mcm.m_vStates.size() < 145)
+        while (m_Blockchain.m_mcm.m_vStates.size() < height)
             m_Blockchain.AddBlock();
     }
 
