@@ -350,7 +350,11 @@ struct TestWalletRig
     };
     TestWalletRig(const string& name, IWalletDB::Ptr walletDB, Wallet::TxCompletedAction&& action = Wallet::TxCompletedAction(), Type type = Type::Regular, bool oneTimeBbsEndpoint = false, uint32_t nodePollPeriod_ms = 0)
         : m_WalletDB{ walletDB }
+#if defined(BEAM_HW_WALLET)
+        , m_KeyKeeper{ make_shared<wallet::TrezorKeyKeeper>() }
+#else
         , m_KeyKeeper{ make_shared<wallet::LocalPrivateKeyKeeper>(walletDB) }
+#endif
         , m_Wallet{ m_WalletDB, move(action),( type == Type::ColdWallet) ? []() {io::Reactor::get_Current().stop(); } : Wallet::UpdateCompletedAction() }
     {
         if (m_WalletDB->get_MasterKdf()) // can create secrets
@@ -821,11 +825,11 @@ class TestNode
 {
 public:
     using NewBlockFunc = std::function<void(Height)>;
-    TestNode(NewBlockFunc func = NewBlockFunc())
+    TestNode(NewBlockFunc func = NewBlockFunc(), Height height = 145)
         : m_NewBlockFunc(func)
     {
         m_Server.Listen(io::Address::localhost().port(32125));
-        while (m_Blockchain.m_mcm.m_vStates.size() < 145)
+        while (m_Blockchain.m_mcm.m_vStates.size() < height)
             m_Blockchain.AddBlock();
     }
 

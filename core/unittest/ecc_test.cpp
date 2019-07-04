@@ -1383,42 +1383,6 @@ struct IHWWallet
 	virtual bool SignTransaction(Scalar::Native& res, const TransactionData& tx) = 0;
 };
 
-#if defined(BEAM_HW_WALLET)
-
-struct TrezorWallet
-    : IHWWallet
-{
-    beam::HWWallet m_trezor;
-
-    using AmountSigned = int64_t;
-
-    void Initialize()
-    {
-
-    }
-
-    void ResetNonce(Point::Native& res, uint32_t iSlot) override
-    {
-
-    }
-
-    void SummarizeCommitment(Point::Native& res, const TransactionInOuts& tx) override
-    {
-
-    }
-
-    void CreateOutput(beam::Output& outp, const Key::IDV& kidv)  override
-    {
-    }
-
-    bool SignTransaction(Scalar::Native& res, const TransactionData& tx) override
-    {
-        return false;
-    }
-};
-
-#endif
-
 struct HWWalletEmulator
 	:public IHWWallet
 {
@@ -1655,10 +1619,9 @@ struct MyWallet
 	}
 };
 
-template<typename HW>
 void TestTransactionHW()
 {
-    HW hw1, hw2;
+	HWWalletEmulator hw1, hw2;
 	hw1.Initialize();
 	hw2.Initialize();
 
@@ -2207,31 +2170,27 @@ void TestTransactionHWSingular()
 
 void TestAll()
 {
-	 TestUintBig();
-	 TestHash();
-	 TestScalars();
-	 TestPoints();
-	 TestSigning();
-	 TestCommitments();
-	 TestRangeProof(false);
-	 TestRangeProof(true);
-	 TestTransaction();
-     TestTransactionHW<HWWalletEmulator>();
-     TestTxKernel();
-     TestTransactionHWSingular();
-
-#if defined(BEAM_HW_WALLET)
-    TestTransactionHW<TrezorWallet>();
-#endif
-     TestMultiSigOutput();
-	 TestCutThrough();
-	 TestAES();
-	 TestKdf();
-	 TestBbs();
-	 TestDifficulty();
-	 TestRandom();
-	 TestFourCC();
-	 TestTreasury();
+	TestUintBig();
+	TestHash();
+	TestScalars();
+	TestPoints();
+	TestSigning();
+	TestCommitments();
+	TestRangeProof(false);
+	TestRangeProof(true);
+	TestTransaction();
+	TestTransactionHW();
+	TestTxKernel();
+	TestTransactionHWSingular();   
+	TestMultiSigOutput();
+	TestCutThrough();
+	TestAES();
+	TestKdf();
+	TestBbs();
+	TestDifficulty();
+	TestRandom();
+	TestFourCC();
+	TestTreasury();
 }
 
 

@@ -103,7 +103,11 @@ namespace beam::wallet
 
     Wallet::Wallet(IWalletDB::Ptr walletDB, TxCompletedAction&& action, UpdateCompletedAction&& updateCompleted)
         : m_WalletDB{ walletDB }
-        , m_KeyKeeper{ walletDB->get_MasterKdf() ? make_shared<LocalPrivateKeyKeeper>(walletDB): IPrivateKeyKeeper::Ptr() }
+#if defined(BEAM_HW_WALLET)
+        , m_KeyKeeper{ make_shared<wallet::TrezorKeyKeeper>() }
+#else
+        , m_KeyKeeper{ walletDB->get_MasterKdf() ? make_shared<LocalPrivateKeyKeeper>(walletDB) : IPrivateKeyKeeper::Ptr() }
+#endif
         , m_TxCompletedAction{move(action)}
         , m_UpdateCompleted{move(updateCompleted)}
         , m_LastSyncTotal(0)

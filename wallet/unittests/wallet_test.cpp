@@ -126,7 +126,7 @@ namespace
         WALLET_CHECK(coins[0].m_status == Coin::Available);
         WALLET_CHECK(senderWalletDB->getTxHistory().empty());
 
-        TestNode node;
+        TestNode node(TestNode::NewBlockFunc(), 100501);
         TestWalletRig sender("sender", senderWalletDB, [](auto) { io::Reactor::get_Current().stop(); });
         helpers::StopWatch sw;
 
@@ -1413,20 +1413,142 @@ void TestNegotiation()
 
 
 #if defined(BEAM_HW_WALLET)
+
+IWalletDB::Ptr createSqliteWalletDB()
+{
+    const char* dbName = "wallet.db";
+    if (boost::filesystem::exists(dbName))
+    {
+        boost::filesystem::remove(dbName);
+    }
+    ECC::NoLeak<ECC::uintBig> seed;
+    seed.V = Zero;
+    auto walletDB = WalletDB::init(dbName, string("pass123"), seed, io::Reactor::get_Current().shared_from_this());
+    beam::Block::SystemState::ID id = { };
+    id.m_Height = 134;
+    walletDB->setSystemStateID(id);
+    return walletDB;
+}
+
+void TestHWTransaction(IPrivateKeyKeeper& pkk)
+{
+    io::Reactor::Ptr mainReactor{ io::Reactor::create() };
+    io::Reactor::Scope scope(*mainReactor);
+
+    Point::Native totalPublicExcess = Zero;
+
+    std::vector<Coin::ID> inputCoins =
+    {
+        {40, 0, Key::Type::Regular},
+    };
+
+    std::vector<Coin::ID> outputCoins =
+    {
+        {16, 0, Key::Type::Regular},
+        {24, 0, Key::Type::Regular},
+    };
+
+    beam::Amount fee = 0;
+    ECC::Scalar::Native offset = Zero;
+    offset.GenRandomNnz();
+
+    {
+
+        Point::Native publicAmount = Zero;
+        Amount amount = 0;
+        for (const auto& cid : inputCoins)
+        {
+            amount += cid.m_Value;
+        }
+        AmountBig::AddTo(publicAmount, amount);
+        amount = 0;
+        publicAmount = -publicAmount;
+        for (const auto& cid : outputCoins)
+        {
+            amount += cid.m_Value;
+        }
+        AmountBig::AddTo(publicAmount, amount);
+
+        Point::Native publicExcess = Context::get().G * offset;
+
+        {
+            Point::Native commitment;
+
+            for (const auto& output : outputCoins)
+            {
+                if (commitment.Import(pkk.GeneratePublicKeySync(output, true)))
+                {
+                    publicExcess += commitment;
+                }
+            }
+
+            publicExcess = -publicExcess;
+            for (const auto& input : inputCoins)
+            {
+                if (commitment.Import(pkk.GeneratePublicKeySync(input, true)))
+                {
+                    publicExcess += commitment;
+                }
+            }
+        }
+
+        publicExcess += publicAmount;
+
+        totalPublicExcess = publicExcess;
+    }
+
+    {
+        ECC::Point::Native peerPublicNonce = Zero;
+
+        TxKernel kernel;
+        kernel.m_Fee = fee;
+        kernel.m_Height = { 25000, 27500 };
+        kernel.m_Commitment = totalPublicExcess;
+
+        ECC::Hash::Value message;
+        kernel.get_Hash(message);
+
+        KernelParameters kernelParameters;
+        kernelParameters.fee = fee;
+
+        kernelParameters.height = { 25000, 27500 };
+        kernelParameters.commitment = totalPublicExcess;
+
+        Signature signature;
+
+        ECC::Point::Native publicNonce;
+        uint8_t nonceSlot = (uint8_t)pkk.AllocateNonceSlot();
+        publicNonce.Import(pkk.GenerateNonceSync(nonceSlot));
+
+
+        signature.m_NoncePub = publicNonce + peerPublicNonce;
+        signature.m_k = pkk.SignSync(inputCoins, outputCoins, offset, nonceSlot, kernelParameters, publicNonce + peerPublicNonce);
+
+        if (signature.IsValid(message, totalPublicExcess))
+        {
+            LOG_DEBUG() << "Ok, signature is valid :)";
+        }
+        else
+        {
+            LOG_ERROR() << "Error, invalid signature :(";
+        }
+    }
+}
+
 void TestHWWallet()
 {
     cout << "Test HW wallet" << std::endl;
 
     HWWallet hw;
-    hw.getOwnerKey([](const std::string& key)
-    {
-        LOG_INFO() << "HWWallet.getOwnerKey(): " << key;
-    });
+    //hw.getOwnerKey([](const std::string& key)
+    //{
+    //    LOG_INFO() << "HWWallet.getOwnerKey(): " << key;
+    //});
 
-    hw.generateNonce(1, [](const ECC::Point& nonce)
-    {
-        LOG_INFO() << "HWWallet.generateNonce(): " << nonce;
-    });
+    //hw.generateNonce(1, [](const ECC::Point& nonce)
+    //{
+    //    LOG_INFO() << "HWWallet.generateNonce(): " << nonce;
+    //});
 
     const ECC::Key::IDV kidv(100500, 15, Key::Type::Regular, 7);
 
@@ -1434,26 +1556,58 @@ void TestHWWallet()
 
     hw.generateRangeProof(kidv, false, [&pt2](const ECC::RangeProof::Confidential &rp) {
         auto hGen = beam::SwitchCommitment(NULL).m_hGen;
+
         // Recovery seed: copy, vendor, shallow, raven, coffee, appear, book, blast, lock, exchange, farm, glue
         uint8_t x[] = {0xce, 0xb2, 0x0d, 0xa2, 0x73, 0x07, 0x0e, 0xb9, 0xc8, 0x2e, 0x47, 0x5b, 0x6f, 0xa0, 0x7b, 0x85, 0x8d, 0x2c, 0x40, 0x9b, 0x9c, 0x24, 0x31, 0xba, 0x3a, 0x8e, 0x2c, 0xba, 0x7b, 0xa1, 0xb0, 0x04};
         ECC::Point pt;
         pt.m_X = beam::Blob(x, 32);
         pt.m_Y = 1;
         WALLET_CHECK(pt == pt2);
+
         ECC::Point::Native comm;
-        comm.Import(pt);
+        comm.Import(pt2);
         {
             Oracle oracle;
             oracle << 0u;
+            oracle << pt2;
             LOG_INFO() << "rp.IsValid(): " << rp.IsValid(comm, oracle, &hGen);
         }
 
         {
             Oracle oracle;
             oracle << 0u;
+            oracle << pt2;
             WALLET_CHECK(rp.IsValid(comm, oracle, &hGen));
         }
     });
+
+    {
+        Height scheme = 100500;
+        io::Reactor::Ptr mainReactor{ io::Reactor::create() };
+        io::Reactor::Scope scope(*mainReactor);
+        TrezorKeyKeeper tk;
+        LocalPrivateKeyKeeper lpkk(createSqliteWalletDB());
+        IPrivateKeyKeeper& pkk = tk;
+        ECC::Point::Native comm2;
+        auto outputs = pkk.GenerateOutputsSync(scheme, { kidv });
+        WALLET_CHECK(outputs[0]->IsValid(scheme, comm2));
+    }
+
+    // test transaction sign with local key keeper
+    {
+        io::Reactor::Ptr mainReactor{ io::Reactor::create() };
+        io::Reactor::Scope scope(*mainReactor);
+
+        LocalPrivateKeyKeeper lpkk(createSqliteWalletDB());
+        TestHWTransaction(lpkk);
+    }
+
+    // test transaction sign with HW key keeper
+    {
+        TrezorKeyKeeper trezor;
+        TestHWTransaction(trezor);
+    }
+
 }
 #endif
 
@@ -1465,7 +1619,7 @@ int main()
 #endif
     auto logger = beam::Logger::create(logLevel, logLevel);
     Rules::get().FakePoW = true;
-	Rules::get().pForks[1].m_Height = 100500; // needed for lightning network to work
+    Rules::get().pForks[1].m_Height = 100500; // needed for lightning network to work
     Rules::get().UpdateChecksum();
 
 	//TestNegotiation();
@@ -1484,15 +1638,15 @@ int main()
 
     TestTxToHimself();
 
-    TestExpiredTransaction();
+    ////TestExpiredTransaction();
 
-    TestTransactionUpdate();
-    //TestTxPerformance();
+    //TestTransactionUpdate();
+    ////TestTxPerformance();
 
-    TestColdWalletSending();
-    TestColdWalletReceiving();
+    //TestColdWalletSending();
+    //TestColdWalletReceiving();
 
-    TestTxExceptionHandling();
+    //TestTxExceptionHandling();
 #if defined(BEAM_HW_WALLET)
     TestHWWallet();
 #endif
