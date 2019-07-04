@@ -1552,13 +1552,13 @@ void TestHWWallet()
         comm.Import(pt);
         {
             Oracle oracle;
-          //  oracle << 0u;
+            oracle << 0u;
             LOG_INFO() << "rp.IsValid(): " << rp.IsValid(comm, oracle, &hGen);
         }
 
         {
             Oracle oracle;
-            //oracle << 0u;
+            oracle << 0u;
             WALLET_CHECK(rp.IsValid(comm, oracle, &hGen));
         }
     });
