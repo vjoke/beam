@@ -1081,6 +1081,7 @@ namespace beam
 #ifndef BEAM_TESTNET
             << "masternet"
 #endif
+            << "testfork"
 			// out
 			>> pForks[0].m_Hash;
 
