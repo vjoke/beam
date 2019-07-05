@@ -126,7 +126,7 @@ namespace
         WALLET_CHECK(coins[0].m_status == Coin::Available);
         WALLET_CHECK(senderWalletDB->getTxHistory().empty());
 
-        TestNode node(TestNode::NewBlockFunc(), 100501);
+        TestNode node;
         TestWalletRig sender("sender", senderWalletDB, [](auto) { io::Reactor::get_Current().stop(); });
         helpers::StopWatch sw;
 
@@ -190,7 +190,12 @@ namespace
         };
 
         TestNode node;
-        TestWalletRig sender("sender", createSenderWalletDB(), f, TestWalletRig::Type::Regular, false, 0);
+#if defined(BEAM_HW_WALLET)
+        const auto senderType = TestWalletRig::Type::Hardware;
+#else
+        const auto senderType = TestWalletRig::Type::Regular;
+#endif
+        TestWalletRig sender("sender", createSenderWalletDB(), f, senderType, false, 0);
         TestWalletRig receiver("receiver", createReceiverWalletDB(), f);
 
         WALLET_CHECK(sender.m_WalletDB->selectCoins(6).size() == 2);
@@ -554,7 +559,12 @@ namespace
         WALLET_CHECK(senderWalletDB->getTxHistory().empty());
 
         TestNode node;
-        TestWalletRig sender("sender", senderWalletDB, [](auto) { io::Reactor::get_Current().stop(); });
+#if defined(BEAM_HW_WALLET)
+        const auto senderType = TestWalletRig::Type::Hardware;
+#else
+        const auto senderType = TestWalletRig::Type::Regular;
+#endif
+        TestWalletRig sender("sender", senderWalletDB, [](auto) { io::Reactor::get_Current().stop(); }, senderType);
         helpers::StopWatch sw;
 
         sw.start();
@@ -622,13 +632,17 @@ namespace
                 completedCount = 2;
             }
         };
-
-        TestWalletRig sender("sender", createSenderWalletDB(), f);
+#if defined(BEAM_HW_WALLET)
+        const auto senderType = TestWalletRig::Type::Hardware;
+#else
+        const auto senderType = TestWalletRig::Type::Regular;
+#endif
+        TestWalletRig sender("sender", createSenderWalletDB(), f, senderType);
         TestWalletRig receiver("receiver", createReceiverWalletDB(), f, TestWalletRig::Type::Offline);
 
         auto newBlockFunc = [&receiver](Height height)
         {
-            if (height == 200)
+            if (height == 100500+50)
             {
                 auto nodeEndpoint = make_shared<proto::FlyClient::NetworkStd>(receiver.m_Wallet);
                 nodeEndpoint->m_Cfg.m_vNodes.push_back(io::Address::localhost().port(32125));
@@ -716,7 +730,12 @@ namespace
         io::Reactor::Ptr mainReactor{ io::Reactor::create() };
         io::Reactor::Scope scope(*mainReactor);
         EmptyTestGateway gateway;
-        TestWalletRig sender("sender", createSenderWalletDB());
+#if defined(BEAM_HW_WALLET)
+        const auto senderType = TestWalletRig::Type::Hardware;
+#else
+        const auto senderType = TestWalletRig::Type::Regular;
+#endif
+        TestWalletRig sender("sender", createSenderWalletDB(), Wallet::TxCompletedAction(), senderType);
         TestWalletRig receiver("receiver", createReceiverWalletDB());
 
         TxID txID = wallet::GenerateTxID();
@@ -763,8 +782,12 @@ namespace
 
         io::Reactor::Ptr mainReactor{ io::Reactor::create() };
         io::Reactor::Scope scope(*mainReactor);
-
-        TestWalletRig sender("sender", createSenderWalletDB());
+#if defined(BEAM_HW_WALLET)
+        const auto senderType = TestWalletRig::Type::Hardware;
+#else
+        const auto senderType = TestWalletRig::Type::Regular;
+#endif
+        TestWalletRig sender("sender", createSenderWalletDB(), Wallet::TxCompletedAction(), senderType);
         TestWalletRig receiver("receiver", createReceiverWalletDB());
         Height currentHeight = sender.m_WalletDB->getCurrentHeight();
 
@@ -893,7 +916,7 @@ namespace
             }
         };
 
-        TestNode node;
+        TestNode node({}, 145);
         TestWalletRig receiver("receiver", createReceiverWalletDB(), f);
         {
             TestWalletRig privateSender("sender", createSenderWalletDB(true), f, TestWalletRig::Type::ColdWallet);
@@ -985,7 +1008,7 @@ namespace
             }
         };
 
-        TestNode node;
+        TestNode node({}, 145);
         TestWalletRig sender("sender", createSenderWalletDB(), f);
 
         {
@@ -1625,31 +1648,31 @@ int main()
     Rules::get().pForks[1].m_Height = 100500; // needed for lightning network to work
     Rules::get().UpdateChecksum();
 
-	//TestNegotiation();
+	TestNegotiation();
 
- //   TestP2PWalletNegotiationST();
- //   //TestP2PWalletReverseNegotiationST();
+    TestP2PWalletNegotiationST();
+    //TestP2PWalletReverseNegotiationST();
 
- //   {
- //       io::Reactor::Ptr mainReactor{ io::Reactor::create() };
- //       io::Reactor::Scope scope(*mainReactor);
- //       //TestWalletNegotiation(CreateWalletDB<TestWalletDB>(), CreateWalletDB<TestWalletDB2>());
- //       TestWalletNegotiation(createSenderWalletDB(), createReceiverWalletDB());
- //   }
+    {
+        io::Reactor::Ptr mainReactor{ io::Reactor::create() };
+        io::Reactor::Scope scope(*mainReactor);
+        //TestWalletNegotiation(CreateWalletDB<TestWalletDB>(), CreateWalletDB<TestWalletDB2>());
+        TestWalletNegotiation(createSenderWalletDB(), createReceiverWalletDB());
+    }
 
- //   TestSplitTransaction();
+    TestSplitTransaction();
 
     TestTxToHimself();
 
-    ////TestExpiredTransaction();
+    TestExpiredTransaction();
 
-    //TestTransactionUpdate();
-    ////TestTxPerformance();
+    TestTransactionUpdate();
+    //TestTxPerformance();
 
-    //TestColdWalletSending();
-    //TestColdWalletReceiving();
+    TestColdWalletSending();
+    TestColdWalletReceiving();
 
-    //TestTxExceptionHandling();
+    TestTxExceptionHandling();
 #if defined(BEAM_HW_WALLET)
     TestHWWallet();
 #endif

@@ -93,7 +93,7 @@ namespace beam::wallet
         using TxCompletedAction = std::function<void(const TxID& tx_id)>;
         using UpdateCompletedAction = std::function<void()>;
 
-        Wallet(IWalletDB::Ptr walletDB, TxCompletedAction&& action = TxCompletedAction(), UpdateCompletedAction&& updateCompleted = UpdateCompletedAction());
+        Wallet(IWalletDB::Ptr walletDB, TxCompletedAction&& action = TxCompletedAction(), UpdateCompletedAction&& updateCompleted = UpdateCompletedAction(), bool initHW = false);
         virtual ~Wallet();
 
         void SetNodeEndpoint(std::shared_ptr<proto::FlyClient::INetwork> nodeEndpoint);
@@ -124,7 +124,9 @@ namespace beam::wallet
 
         void ProcessTransaction(wallet::BaseTransaction::Ptr tx);
         void RegisterTransactionType(wallet::TxType type, wallet::BaseTransaction::Creator creator);
-        
+
+        IPrivateKeyKeeper::Ptr getKeyKeeper() const { return m_KeyKeeper; }
+
     private:
         void RefreshTransactions();
         void ResumeTransaction(const TxDescription& tx);

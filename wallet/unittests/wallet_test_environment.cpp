@@ -346,17 +346,14 @@ struct TestWalletRig
     {
         Regular,
         ColdWallet,
-        Offline
+        Offline,
+        Hardware
     };
     TestWalletRig(const string& name, IWalletDB::Ptr walletDB, Wallet::TxCompletedAction&& action = Wallet::TxCompletedAction(), Type type = Type::Regular, bool oneTimeBbsEndpoint = false, uint32_t nodePollPeriod_ms = 0)
         : m_WalletDB{ walletDB }
-#if defined(BEAM_HW_WALLET)
-        , m_KeyKeeper{ make_shared<wallet::TrezorKeyKeeper>() }
-#else
-        , m_KeyKeeper{ make_shared<wallet::LocalPrivateKeyKeeper>(walletDB) }
-#endif
-        , m_Wallet{ m_WalletDB, move(action),( type == Type::ColdWallet) ? []() {io::Reactor::get_Current().stop(); } : Wallet::UpdateCompletedAction() }
+        , m_Wallet{ m_WalletDB, move(action),( type == Type::ColdWallet) ? []() {io::Reactor::get_Current().stop(); } : Wallet::UpdateCompletedAction(), type == Type::Hardware }
     {
+          m_KeyKeeper = m_Wallet.getKeyKeeper();
         if (m_WalletDB->get_MasterKdf()) // can create secrets
         {
             WalletAddress wa = storage::createAddress(*m_WalletDB);
@@ -376,7 +373,7 @@ struct TestWalletRig
                 m_Wallet.AddMessageEndpoint(make_shared<ColdWalletMessageEndpoint>(m_Wallet, m_WalletDB));
                 break;
             }
-
+        case Type::Hardware:
         case Type::Regular:
             {
                 auto nodeEndpoint = make_shared<proto::FlyClient::NetworkStd>(m_Wallet);
@@ -825,7 +822,7 @@ class TestNode
 {
 public:
     using NewBlockFunc = std::function<void(Height)>;
-    TestNode(NewBlockFunc func = NewBlockFunc(), Height height = 145)
+    TestNode(NewBlockFunc func = NewBlockFunc(), Height height = 100500)
         : m_NewBlockFunc(func)
     {
         m_Server.Listen(io::Address::localhost().port(32125));
