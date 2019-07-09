@@ -593,8 +593,4 @@ namespace beam::wallet
         }
         return false;
     }
-
-#if defined(BEAM_HW_WALLET)
-    size_t TrezorKeyKeeper::m_latestSlot = 0;
-#endif
 }

@@ -274,7 +274,7 @@ namespace beam::wallet
                     static const unsigned LOG_CLEANUP_PERIOD_SEC = 120 * 3600; // 5 days
                     LogRotation logRotation(*m_reactor, LOG_ROTATION_PERIOD_SEC, LOG_CLEANUP_PERIOD_SEC);
 
-                    auto wallet = make_shared<Wallet>(m_walletDB);
+                    auto wallet = make_shared<Wallet>(m_walletDB, Wallet::TxCompletedAction(), Wallet::UpdateCompletedAction(), true);
                     m_wallet = wallet;
 
                     struct MyNodeNetwork :public proto::FlyClient::NetworkStd {
