@@ -24,3 +24,5 @@ notarize_dmg() {(
     fi
   done
 )}
+
+notarize_dmg
