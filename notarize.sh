@@ -11,6 +11,7 @@ notarize_dmg() {(
     fullstatus=`xcrun altool --notarization-info "$uuid" --username "$MACOS_NOTARIZE_USER" --password "$MACOS_NOTARIZE_PASS" 2>&1`
     status=`echo "$fullstatus" | grep 'Status\:' | awk '{ print $2 }'`
     if [ "$status" = "success" ]; then
+      xcrun stapler staple "$BEAM_WALLET_UI_IN"
       echo "Notarization success"
       return
     elif [ "$status" = "in" ]; then

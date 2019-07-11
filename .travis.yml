@@ -39,7 +39,7 @@ matrix:
 
     - os: osx
       language: cpp
-      osx_image: xcode10
+      osx_image: xcode10.1
       install:
         - export TZ=Etc/GMT-3
         - brew update
@@ -81,7 +81,6 @@ matrix:
         - codesign --deep --force -v -s "$MACOS_SIGN_IDENTITY" -o runtime --timestamp explorer/explorer-node$BEAM_TARGET_SUFFIX
         - codesign --deep --force -v -s "$MACOS_SIGN_IDENTITY" -o runtime --timestamp $BEAM_WALLET_UI_IN
         - bash notarize.sh
-        - xcrun stapler staple -v "$BEAM_WALLET_UI_IN"
 
 ###############################################################################
 # Linux Debug
