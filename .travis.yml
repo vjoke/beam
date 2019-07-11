@@ -81,7 +81,7 @@ matrix:
         - codesign --deep --force -v -s "$MACOS_SIGN_IDENTITY" -o runtime --timestamp explorer/explorer-node$BEAM_TARGET_SUFFIX
         - codesign --deep --force -v -s "$MACOS_SIGN_IDENTITY" -o runtime --timestamp $BEAM_WALLET_UI_IN
         - bash notarize.sh
-        - sudo xcrun stapler staple "$BEAM_WALLET_UI_IN"
+        - xcrun stapler staple -v "$BEAM_WALLET_UI_IN"
 
 ###############################################################################
 # Linux Debug
