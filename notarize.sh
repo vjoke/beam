@@ -12,7 +12,6 @@ notarize_dmg() {(
     status=`echo "$fullstatus" | grep 'Status\:' | awk '{ print $2 }'`
     if [ "$status" = "success" ]; then
       echo "Notarization success"
-      xcrun stapler staple "$BEAM_WALLET_UI_IN"
       return
     elif [ "$status" = "in" ]; then
       echo "Notarization still in progress, sleeping for 15 seconds and trying again"
