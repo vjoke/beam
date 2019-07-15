@@ -72,10 +72,11 @@ namespace
     static unique_ptr<WalletModel> walletModel;
     static ECC::NoLeak<ECC::uintBig> passwordHash;
 
-    void initLogger(const string& appData, const string& appVersion)
+    void initLogger(const string& appData, const string& appVersion, uint64_t heightForkTest)
     {
         static auto logger = Logger::create(LOG_LEVEL_DEBUG, LOG_LEVEL_DEBUG, LOG_LEVEL_DEBUG, "wallet_", (fs::path(appData) / fs::path("logs")).string());
 
+        Rules::get().pForks[1].m_Height = heightForkTest;
         Rules::get().UpdateChecksum();
         LOG_INFO() << "Beam Mobile Wallet " << appVersion << " (" << BRANCH_NAME << ") library: " << PROJECT_VERSION;
         LOG_INFO() << "Rules signature: " << Rules::get().get_SignatureStr();
@@ -88,11 +89,11 @@ extern "C" {
 #endif
 
 JNIEXPORT jobject JNICALL BEAM_JAVA_API_INTERFACE(createWallet)(JNIEnv *env, jobject thiz, 
-    jstring appVersion, jstring nodeAddrStr, jstring appDataStr, jstring passStr, jstring phrasesStr, jboolean restore)
+    jstring appVersion, jstring nodeAddrStr, jstring appDataStr, jstring passStr, jstring phrasesStr, jboolean restore, jint heightForkTest)
 {
     auto appData = JString(env, appDataStr).value();
 
-    initLogger(appData, JString(env, appVersion).value());
+    initLogger(appData, JString(env, appVersion).value(), heightForkTest);
     
     LOG_DEBUG() << "creating wallet...";
 
@@ -197,11 +198,11 @@ JNIEXPORT jboolean JNICALL BEAM_JAVA_API_INTERFACE(isWalletRunning)(JNIEnv *env,
 }
 
 JNIEXPORT jobject JNICALL BEAM_JAVA_API_INTERFACE(openWallet)(JNIEnv *env, jobject thiz, 
-    jstring appVersion, jstring nodeAddrStr, jstring appDataStr, jstring passStr)
+    jstring appVersion, jstring nodeAddrStr, jstring appDataStr, jstring passStr, jint heightForkTest)
 {
     auto appData = JString(env, appDataStr).value();
 
-    initLogger(appData, JString(env, appVersion).value());
+    initLogger(appData, JString(env, appVersion).value(), heightForkTest);
 
     LOG_DEBUG() << "opening wallet...";
 
