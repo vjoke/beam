@@ -62,6 +62,7 @@ list(APPEND SUPPORTED_LANGS "zh_CN")
 list(APPEND SUPPORTED_LANGS "fr_FR")
 list(APPEND SUPPORTED_LANGS "ko_KR")
 list(APPEND SUPPORTED_LANGS "sv_SE")
+list(APPEND SUPPORTED_LANGS "tr_TR")
 
 set(UI_SRC
     ui.cpp
@@ -110,6 +111,7 @@ set(UI_SRC
     model/node_model.cpp
     model/qr.h
     model/qr.cpp
+    model/helpers.h
 )
 
 beam_translations_update_ts("${SUPPORTED_LANGS}" TS_FILES)

@@ -135,9 +135,26 @@ namespace beam::wallet
         ResumeAllTransactions();
     }
 
+    Wallet::~Wallet()
+    {
+        CleanupNetwork();
+    }
+
+    void Wallet::CleanupNetwork()
+    {
+        // clear all requests
+#define THE_MACRO(type, msgOut, msgIn) \
+                while (!m_Pending##type.empty()) \
+                    DeleteReq(*m_Pending##type.begin());
+
+        REQUEST_TYPES_All(THE_MACRO)
+#undef THE_MACRO
+
+        m_MessageEndpoints.clear();
+        m_NodeEndpoint = nullptr;
+    }
 
     // Fly client implementation
-
     void Wallet::get_Kdf(Key::IKdf::Ptr& pKdf)
     {
         pKdf = m_WalletDB->get_MasterKdf();
@@ -171,8 +188,6 @@ namespace beam::wallet
         return m_WalletDB->get_History();
     }
 
-    // 
-
     void Wallet::SetNodeEndpoint(std::shared_ptr<proto::FlyClient::INetwork> nodeEndpoint)
     {
         m_NodeEndpoint = nodeEndpoint;
@@ -182,7 +197,6 @@ namespace beam::wallet
     {
         m_MessageEndpoints.insert(endpoint);
     }
-
 
     // Atomic Swap related methods
     // TODO: Refactor
@@ -204,17 +218,6 @@ namespace beam::wallet
     void Wallet::initSwapConditions(Amount beamAmount, Amount swapAmount, AtomicSwapCoin swapCoin, bool isBeamSide, SwapSecondSideChainType chainType)
     {
         m_swapConditions.push_back(SwapConditions{ beamAmount, swapAmount, swapCoin, isBeamSide, chainType });
-    }
-
-    Wallet::~Wallet()
-    {
-        // clear all requests
-#define THE_MACRO(type, msgOut, msgIn) \
-        while (!m_Pending##type.empty()) \
-            DeleteReq(*m_Pending##type.begin());
-
-        REQUEST_TYPES_All(THE_MACRO)
-#undef THE_MACRO
     }
 
     TxID Wallet::transfer_money(const WalletID& from, const WalletID& to, Amount amount, Amount fee, bool sender, Height lifetime, Height responseTime, ByteBuffer&& message, bool saveReceiver)
@@ -239,22 +242,12 @@ namespace beam::wallet
                 LOG_INFO() << "Can't send to the expired address.";
                 throw AddressExpiredException();
             }
-
-            // update address comment if changed
-            auto messageStr = std::string(message.begin(), message.end());
-
-            if (messageStr != receiverAddr->m_label)
-            {
-                receiverAddr->m_label = messageStr;
-                m_WalletDB->saveAddress(*receiverAddr);
-            }
         }
         else if (saveReceiver)
         {
             WalletAddress address;
             address.m_walletID = to;
             address.m_createTime = getTimestamp();
-            address.m_label = std::string(message.begin(), message.end());
 
             m_WalletDB->saveAddress(address);
         }
