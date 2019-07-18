@@ -3411,6 +3411,7 @@ void Node::Miner::Initialize(IExternalPOW* externalPOW)
             pt.m_pReactor = io::Reactor::create();
             pt.m_pEvt = io::AsyncEvent::create(*pt.m_pReactor, [this, i]() { OnRefresh(i); });
             pt.m_Thread = std::thread(&io::Reactor::run, pt.m_pReactor);
+            LOG_INFO() << "Ray: created an thread for mining ";
         }
     }
 
@@ -3439,6 +3440,7 @@ void Node::Miner::OnFinalizerChanged(Peer* p)
 
 void Node::Miner::OnRefresh(uint32_t iIdx)
 {
+    LOG_INFO() << "Ray: on refresh called ";
     while (true)
     {
         Task::Ptr pTask;
@@ -3493,6 +3495,7 @@ void Node::Miner::OnRefresh(uint32_t iIdx)
 
                 if (dt_ms >= timeout_ms)
                 {
+                    LOG_INFO() << "Ray: solved for mining ";
                     bSolved = true;
                     break;
                 }
