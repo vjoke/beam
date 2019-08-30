@@ -93,18 +93,18 @@ namespace beam::wallet
         }
     }
 
-    void LocalPrivateKeyKeeper::GenerateOutputs(Height schemeHeight, const std::vector<Key::IDV>& ids, Callback<Outputs>&& resultCallback, ExceptionCallback&& exceptionCallback)
+    void LocalPrivateKeyKeeper::GenerateOutputs(Height schemeHeight, const std::vector<Key::IDV>& ids, Callback<Outputs>&& resultCallback, ExceptionCallback&& exceptionCallback, AssetID assetID /* = Zero */)
     {
         auto thisHolder = shared_from_this();
         shared_ptr<Outputs> result = make_shared<Outputs>();
         shared_ptr<exception> storedException;
         shared_ptr<future<void>> futureHolder = make_shared<future<void>>();
         *futureHolder = do_thread_async(
-            [thisHolder, this, schemeHeight, ids, result, storedException]()
+            [thisHolder, this, schemeHeight, ids, result, storedException, assetID]()
             {
                 try
                 {
-                    *result = GenerateOutputsSync(schemeHeight, ids);
+                    *result = GenerateOutputsSync(schemeHeight, ids, assetID);
                 }
                 catch (const exception& ex)
                 {
@@ -147,7 +147,7 @@ namespace beam::wallet
 
     ////
 
-    IPrivateKeyKeeper::PublicKeys LocalPrivateKeyKeeper::GeneratePublicKeysSync(const std::vector<Key::IDV>& ids, bool createCoinKey)
+    IPrivateKeyKeeper::PublicKeys LocalPrivateKeyKeeper::GeneratePublicKeysSync(const std::vector<Key::IDV>& ids, bool createCoinKey, const AssetID* pAssetID /* = nullptr */)
     {
         PublicKeys result;
         Scalar::Native secretKey;
@@ -157,7 +157,7 @@ namespace beam::wallet
             for (const auto& coinID : ids)
             {
                 Point& publicKey = result.emplace_back();
-                SwitchCommitment().Create(secretKey, publicKey, *GetChildKdf(coinID), coinID);
+                SwitchCommitment(pAssetID).Create(secretKey, publicKey, *GetChildKdf(coinID), coinID);
             }
         }
         else
@@ -172,14 +172,14 @@ namespace beam::wallet
         return result;
     }
 
-    ECC::Point LocalPrivateKeyKeeper::GeneratePublicKeySync(const Key::IDV& id, bool createCoinKey)
+    ECC::Point LocalPrivateKeyKeeper::GeneratePublicKeySync(const Key::IDV& id, bool createCoinKey, const AssetID* pAssetID /* = nullptr */)
     {
         Scalar::Native secretKey;
         Point publicKey;
 
         if (createCoinKey)
         {
-            SwitchCommitment().Create(secretKey, publicKey, *GetChildKdf(id), id);
+            SwitchCommitment(pAssetID).Create(secretKey, publicKey, *GetChildKdf(id), id);
         }
         else
         {
@@ -189,7 +189,7 @@ namespace beam::wallet
         return publicKey;
     }
 
-    IPrivateKeyKeeper::Outputs LocalPrivateKeyKeeper::GenerateOutputsSync(Height schemeHeigh, const std::vector<Key::IDV>& ids)
+    IPrivateKeyKeeper::Outputs LocalPrivateKeyKeeper::GenerateOutputsSync(Height schemeHeigh, const std::vector<Key::IDV>& ids, AssetID assetID /* = Zero */)
     {
         Outputs result;
         Scalar::Native secretKey;
@@ -198,6 +198,7 @@ namespace beam::wallet
         for (const auto& coinID : ids)
         {
             auto& output = result.emplace_back(make_unique<Output>());
+            output->m_AssetID = assetID;
             output->Create(schemeHeigh, secretKey, *GetChildKdf(coinID), coinID, *m_MasterKdf);
         }
         return result;
@@ -209,9 +210,9 @@ namespace beam::wallet
         return result;
     }
 
-    Scalar LocalPrivateKeyKeeper::SignSync(const std::vector<Key::IDV>& inputs, const std::vector<Key::IDV>& outputs, const Scalar::Native& offset, size_t nonceSlot, const ECC::Hash::Value& message, const Point::Native& publicNonce, const Point::Native& commitment)
+    Scalar LocalPrivateKeyKeeper::SignSync(const std::vector<Key::IDV>& inputs, const std::vector<Key::IDV>& outputs, const Scalar::Native& offset, size_t nonceSlot, const ECC::Hash::Value& message, const Point::Native& publicNonce, const Point::Native& commitment, const AssetID* pAssetID /* = nullptr */)
     {
-        auto excess = GetExcess(inputs, outputs, offset);
+        auto excess = GetExcess(inputs, outputs, offset, pAssetID);
 
         ECC::Signature::MultiSig multiSig;
         ECC::Scalar::Native partialSignature;
@@ -270,7 +271,7 @@ namespace beam::wallet
         return nonce.V;
     }
 
-    Scalar::Native LocalPrivateKeyKeeper::GetExcess(const std::vector<Key::IDV>& inputs, const std::vector<Key::IDV>& outputs, const ECC::Scalar::Native& offset) const
+    Scalar::Native LocalPrivateKeyKeeper::GetExcess(const std::vector<Key::IDV>& inputs, const std::vector<Key::IDV>& outputs, const ECC::Scalar::Native& offset, const AssetID* pAssetID /* = nullptr */) const
     {
         // Excess = Sum(input blinfing factors) - Sum(output blinfing factors) - offset
         Point commitment;
@@ -278,14 +279,14 @@ namespace beam::wallet
         Scalar::Native excess = offset;
         for (const auto& coinID : outputs)
         {
-            SwitchCommitment().Create(blindingFactor, commitment, *GetChildKdf(coinID), coinID);
+            SwitchCommitment(pAssetID).Create(blindingFactor, commitment, *GetChildKdf(coinID), coinID);
             excess += blindingFactor;
         }
         excess = -excess;
 
         for (const auto& coinID : inputs)
         {
-            SwitchCommitment().Create(blindingFactor, commitment, *GetChildKdf(coinID), coinID);
+            SwitchCommitment(pAssetID).Create(blindingFactor, commitment, *GetChildKdf(coinID), coinID);
             excess += blindingFactor;
         }
         return excess;

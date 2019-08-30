@@ -1102,6 +1102,108 @@ namespace
         WALLET_CHECK(newSenderCoins[3].m_ID.m_Type == Key::Type::Regular);
 
     }
+
+    void GenerateRandom(void* p, uint32_t n)
+    {
+        for (uint32_t i = 0; i < n; i++)
+            ((uint8_t*) p)[i] = (uint8_t) rand();
+    }
+
+    void SetRandom(uintBig& x)
+    {
+        GenerateRandom(x.m_pData, x.nBytes);
+    }
+
+    void SetRandom(Scalar::Native& x)
+    {
+        Scalar s;
+        while (true)
+        {
+            SetRandom(s.m_Value);
+            if (!x.Import(s))
+                break;
+        }
+    }
+
+    void TestIssueAsset()
+    {
+        cout << "\nTesting issuing Tx to himself...\n";
+
+        io::Reactor::Ptr mainReactor{ io::Reactor::create() };
+        io::Reactor::Scope scope(*mainReactor);
+
+        auto senderWalletDB = createSqliteWalletDB("sender_wallet.db", false);
+
+        // add coin with keyType - Coinbase
+        beam::Amount coin_amount = 40;
+        Coin coin = CreateAvailCoin(coin_amount, 0);
+        coin.m_ID.m_Type = Key::Type::Coinbase;
+        senderWalletDB->storeCoin(coin);
+
+        auto coins = senderWalletDB->selectCoins(24);
+        WALLET_CHECK(coins.size() == 1);
+        WALLET_CHECK(coins[0].m_ID.m_Type == Key::Type::Coinbase);
+        WALLET_CHECK(coins[0].m_status == Coin::Available);
+        WALLET_CHECK(senderWalletDB->getTxHistory().empty());
+
+        TestNode node;
+        TestWalletRig sender("sender", senderWalletDB, [](auto) { io::Reactor::get_Current().stop(); });
+        helpers::StopWatch sw;
+
+        sw.start();
+        // auto txId = sender.m_Wallet.transfer_money(sender.m_WalletID, sender.m_WalletID, 24, 2, true, 200);
+        Scalar::Native skAsset;
+		beam::AssetID assetID;
+		SetRandom(skAsset);
+		beam::proto::Sk2Pk(assetID, skAsset);
+
+        auto txId = sender.m_Wallet.issue_asset(sender.m_WalletID, 1000, 1234, 2, true, 200);
+
+        mainReactor->run();
+        sw.stop();
+
+        cout << "Issue asset elapsed time: " << sw.milliseconds() << " ms\n";
+
+        // check Tx
+        auto txHistory = senderWalletDB->getTxHistory();
+        WALLET_CHECK(txHistory.size() == 1);
+        WALLET_CHECK(txHistory[0].m_txId == txId);
+        WALLET_CHECK(txHistory[0].m_amount == 0);
+        WALLET_CHECK(txHistory[0].m_change == 38);
+        WALLET_CHECK(txHistory[0].m_fee == 2);
+        // asset related
+        WALLET_CHECK(txHistory[0].m_assetAmount == 1000);
+        WALLET_CHECK(txHistory[0].m_assetID == assetID);
+        WALLET_CHECK(txHistory[0].m_assetCommand == AssetCommand::Issue);
+
+        WALLET_CHECK(txHistory[0].m_status == TxStatus::Completed);
+
+        // check coins
+        vector<Coin> newSenderCoins;
+        senderWalletDB->visitCoins([&newSenderCoins](const Coin& c)->bool
+        {
+            newSenderCoins.push_back(c);
+            return true;
+        });
+
+        WALLET_CHECK(newSenderCoins.size() == 3);
+
+        WALLET_CHECK(newSenderCoins[0].m_ID.m_Type == Key::Type::Coinbase);
+        WALLET_CHECK(newSenderCoins[0].m_status == Coin::Spent);
+        WALLET_CHECK(newSenderCoins[0].m_ID.m_Value == 40);
+
+        WALLET_CHECK(newSenderCoins[1].m_ID.m_Type == Key::Type::Change);
+        WALLET_CHECK(newSenderCoins[1].m_status == Coin::Available);
+        WALLET_CHECK(newSenderCoins[1].m_ID.m_Value == 38);
+        WALLET_CHECK(newSenderCoins[1].m_assetID == Zero);
+
+        WALLET_CHECK(newSenderCoins[2].m_ID.m_Type == Key::Type::Regular);
+        WALLET_CHECK(newSenderCoins[2].m_status == Coin::Available);
+        WALLET_CHECK(newSenderCoins[2].m_ID.m_Value == 1000);
+        WALLET_CHECK(newSenderCoins[2].m_assetID == assetID);
+
+        cout << "\nFinish of testing issuing asset to himself...\n";
+    }
 }
 
 bool RunNegLoop(beam::Negotiator::IBase& a, beam::Negotiator::IBase& b, const char* szTask)
@@ -1472,6 +1574,7 @@ void TestHWWallet()
 }
 #endif
 
+
 int main()
 {
     int logLevel = LOG_LEVEL_DEBUG;
@@ -1482,6 +1585,10 @@ int main()
     Rules::get().FakePoW = true;
 	Rules::get().pForks[1].m_Height = 100500; // needed for lightning network to work
     Rules::get().UpdateChecksum();
+
+    // TestIssueAsset();
+    // // early quit
+    // return 0;
 
 	TestNegotiation();
 

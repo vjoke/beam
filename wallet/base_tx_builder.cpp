@@ -106,7 +106,6 @@ namespace beam::wallet
         {
             return;
         }
-
         GenerateNewCoin(m_Change, true);
     }
 
@@ -121,6 +120,14 @@ namespace beam::wallet
         m_Tx.GetWalletDB()->storeCoin(newUtxo);
         m_OutputCoins.push_back(newUtxo.m_ID);
         m_Tx.SetParameter(TxParameterID::OutputCoins, m_OutputCoins, false, m_SubTxID);
+    }
+
+    void BaseTxBuilder::GenerateNewCoinList(bool bChange)
+    {
+        for (const auto &amount : GetAmountList())
+        {
+            GenerateNewCoin(amount, bChange);
+        }
     }
 
     bool BaseTxBuilder::CreateOutputs()

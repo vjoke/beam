@@ -268,6 +268,76 @@ namespace beam::wallet
         return transfer_money(from, from, amountList, fee, {}, sender, lifetime, responseTime, move(message));
     }
 
+    TxID Wallet::issue_asset(const WalletID& from, Amount assetAmount, uint64_t idx, Amount fee /* = 0 */, bool sender /* = true */, Height lifetime /* = kDefaultTxLifetime */, Height responseTime /* = kDefaultTxResponseTime */, ByteBuffer&& message /* = {} */)
+    {
+        // sanity checking: we send to ourself to issue asset
+        auto receiverAddr = m_WalletDB->getAddress(from);
+
+        if (receiverAddr)
+        {
+            if (receiverAddr->m_OwnID && receiverAddr->isExpired())
+            {
+                LOG_INFO() << "Can't send to the expired address.";
+                throw AddressExpiredException();
+            }
+        }
+        
+        // TODO: use another type
+        Key::ID kid = Key::ID(idx, Key::Type::Regular);
+        // TODO: do not leak the sk by accident
+        // TODO: check if duplicate 
+        Scalar::Native sk;
+        AssetID assetID = Zero;
+        m_WalletDB->get_MasterKdf()->DeriveKey(sk, kid);
+        beam::proto::Sk2Pk(assetID, sk);
+        assert(assetID != Zero);
+        LOG_INFO() << "Created asset ID: " << assetID;
+
+        AmountList amountList = {};
+        CoinIDList coins = {};
+        auto assetAmountList = AmountList{ assetAmount };
+
+        TxID txID = GenerateTxID();
+        auto tx = constructTransaction(txID, TxType::Simple);
+
+        auto assetCommand = AssetCommand::Issue;
+
+        tx->SetParameter(TxParameterID::TransactionType, TxType::Simple, false);
+        tx->SetParameter(TxParameterID::Lifetime, lifetime, false);
+        tx->SetParameter(TxParameterID::PeerResponseHeight, responseTime); 
+        tx->SetParameter(TxParameterID::IsInitiator, true, false);
+        tx->SetParameter(TxParameterID::AmountList, amountList, false);
+        tx->SetParameter(TxParameterID::PreselectedCoins, coins, false);
+        // asset related
+        tx->SetParameter(TxParameterID::AssetCommand, assetCommand, false);
+        tx->SetParameter(TxParameterID::AssetID, assetID, false);
+        tx->SetParameter(TxParameterID::AssetAmountList, assetAmountList, false);
+
+        tx->SetParameter(TxParameterID::AssetKIDIndex, idx, false);
+
+        TxDescription txDescription;
+
+        txDescription.m_txId = txID;
+        txDescription.m_amount = 0;
+        txDescription.m_fee = fee;
+        // asset related
+        txDescription.m_assetCommand = assetCommand;
+        txDescription.m_assetAmount = std::accumulate(assetAmountList.begin(), assetAmountList.end(), 0ULL);
+        txDescription.m_assetID = assetID;
+
+        txDescription.m_peerId = from; // use same address
+        txDescription.m_myId = from;
+        txDescription.m_message = move(message);
+        txDescription.m_createTime = getTimestamp();
+        txDescription.m_sender = sender;
+        txDescription.m_status = TxStatus::Pending;
+        txDescription.m_selfTx = (receiverAddr && receiverAddr->m_OwnID);
+        m_WalletDB->saveTx(txDescription);
+
+        ProcessTransaction(tx);
+        return txID;
+    }
+
     TxID Wallet::swap_coins(const WalletID& from, const WalletID& to, Amount amount, Amount fee, AtomicSwapCoin swapCoin,
         Amount swapAmount, SwapSecondSideChainType chainType, bool isBeamSide/*=true*/,
         Height lifetime/* = kDefaultTxLifetime*/, Height responseTime/* = kDefaultTxResponseTime*/)
@@ -1223,6 +1293,7 @@ namespace beam::wallet
         t->SetParameter(TxParameterID::PeerID, msg.m_From, false);
         t->SetParameter(TxParameterID::IsInitiator, false, false);
         t->SetParameter(TxParameterID::Status, TxStatus::Pending, true);
+        
 
         auto address = m_WalletDB->getAddress(myID);
         if (address.is_initialized())

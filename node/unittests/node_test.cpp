@@ -1678,9 +1678,17 @@ namespace beam
 						Key::IDV kidv(Zero);
 						kidv.m_Value = val;
 
+
 						ECC::Scalar::Native skAsset, skOut;
 						ECC::SetRandom(skAsset);
 						proto::Sk2Pk(m_AssetEmitted, skAsset);
+
+						char szTemp[256]; // should be ok
+						memset(szTemp, 0, sizeof(szTemp));
+
+						m_AssetEmitted.Print(szTemp);
+
+						printf("Ray: emitted %d at %s\n", (val), szTemp);
 
 						TxKernel::Ptr pKrn(new TxKernel);
 						pKrn->m_Commitment.m_X = m_AssetEmitted;

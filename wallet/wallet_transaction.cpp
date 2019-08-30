@@ -14,6 +14,7 @@
 
 #include "wallet_transaction.h"
 #include "base_tx_builder.h"
+#include "asset_tx_builder.h"
 #include "core/block_crypt.h"
 
 #include <numeric>
@@ -51,6 +52,11 @@ namespace beam::wallet
     {
         bool isSender = GetMandatoryParameter<bool>(TxParameterID::IsSender);
         bool isSelfTx = IsSelfTx();
+        if (isSelfTx)
+        {
+            LOG_INFO() << "isSelfTx is true";
+        }
+        
         State txState = GetState();
         AmountList amoutList;
         if (!GetParameter(TxParameterID::AmountList, amoutList))
@@ -58,10 +64,30 @@ namespace beam::wallet
             amoutList = AmountList{ GetMandatoryParameter<Amount>(TxParameterID::Amount) };
         }
 
+        AssetID assetID = Zero;
+        if (GetParameter(TxParameterID::AssetID, assetID)) 
+        {
+            LOG_INFO() << "asset id is " << assetID << "\n";
+        }
+
         if (!m_TxBuilder)
         {
-            m_TxBuilder = make_shared<BaseTxBuilder>(*this, kDefaultSubTxID, amoutList, GetMandatoryParameter<Amount>(TxParameterID::Fee));
+            if (assetID == Zero)
+            {
+                m_TxBuilder = make_shared<BaseTxBuilder>(*this, kDefaultSubTxID, amoutList, GetMandatoryParameter<Amount>(TxParameterID::Fee));
+            }
+            else
+            {
+                AmountList assetAmountList;
+                if (!GetParameter(TxParameterID::AssetAmountList, assetAmountList))
+                {
+                    assetAmountList = AmountList{ GetMandatoryParameter<Amount>(TxParameterID::AssetAmount) };
+                } 
+                /* asset tx builder */
+                m_TxBuilder = make_shared<AssetTxBuilder>(*this, kDefaultSubTxID, GetMandatoryParameter<Amount>(TxParameterID::Fee), assetAmountList, assetID);
+            }
         }
+
         auto sharedBuilder = m_TxBuilder;
         BaseTxBuilder& builder = *sharedBuilder;
 
@@ -99,10 +125,11 @@ namespace beam::wallet
                 if (isSelfTx || !isSender)
                 {
                     // create receiver utxo
-                    for (const auto& amount : builder.GetAmountList())
-                    {
-                        builder.GenerateNewCoin(amount, false);
-                    }
+                    // for (const auto& amount : builder.GetAmountList())
+                    // {
+                    //     builder.GenerateNewCoin(amount, false);
+                    // }
+                    builder.GenerateNewCoinList(false);
                 }
 
                 UpdateTxDescription(TxStatus::InProgress);
@@ -324,6 +351,8 @@ namespace beam::wallet
     {
         SetTxParameter msg;
         msg.AddParameter(TxParameterID::Amount, builder.GetAmount())
+            .AddParameter(TxParameterID::AssetAmount, builder.GetAssetAmount())
+            .AddParameter(TxParameterID::AssetID, builder.GetAssetID())
             .AddParameter(TxParameterID::Fee, builder.GetFee())
             .AddParameter(TxParameterID::MinHeight, builder.GetMinHeight())
             .AddParameter(TxParameterID::Lifetime, builder.GetLifetime())
@@ -366,7 +395,7 @@ namespace beam::wallet
                 GetParameter(TxParameterID::MyID, widMy) &&
                 GetParameter(TxParameterID::KernelID, pc.m_KernelID) &&
                 GetParameter(TxParameterID::Amount, pc.m_Value);
-
+                // TODO: 
             if (bSuccess)
             {
                 pc.m_Sender = widPeer.m_Pk;
@@ -444,6 +473,7 @@ namespace beam::wallet
         case TxParameterID::Status:
         case TxParameterID::TransactionType:
         case TxParameterID::KernelID:
+        case TxParameterID::AssetAmount: // FIXME:
             return true;
         default:
             return false;

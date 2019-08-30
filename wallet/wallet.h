@@ -113,6 +113,8 @@ namespace beam::wallet
         TxID split_coins(const WalletID& from, const AmountList& amountList, Amount fee = 0, bool sender = true, Height lifetime = kDefaultTxLifetime, Height responseTime = kDefaultTxResponseTime, ByteBuffer&& message = {});
         TxID swap_coins(const WalletID& from, const WalletID& to, Amount amount, Amount fee, AtomicSwapCoin swapCoin, Amount swapAmount, SwapSecondSideChainType chainType, bool isBeamSide = true, Height lifetime = kDefaultTxLifetime, Height responseTime = kDefaultTxResponseTime);
 
+        // Methods for confidential asset
+        TxID issue_asset(const WalletID& from, Amount assetAmount, uint64_t idx, Amount fee = 0, bool sender = true, Height lifetime = kDefaultTxLifetime, Height responseTime = kDefaultTxResponseTime, ByteBuffer&& message = {});
 
         // Resets wallet state and rescans the blockchain from scratch
         void Refresh();

@@ -1194,13 +1194,16 @@ struct TransactionMaker
 			// emit some asset
 			Scalar::Native skAsset;
 			beam::AssetID aid;
+			// ray: 如果deposit为true，下面这2个值必须相同， 否则交易验证不通过。
+			// TODO: 这个与m_ipp有关系，后面再调查
 			Amount valAsset = 4431;
+			Amount mainAsset = 4431;
 
 			SetRandom(skAsset);
 			beam::proto::Sk2Pk(aid, skAsset);
 
 			if (beam::Rules::get().CA.Deposit)
-				m_pPeers[0].AddInput(m_Trans, valAsset, m_Kdf); // input being-deposited
+				m_pPeers[0].AddInput(m_Trans, mainAsset, m_Kdf); // input being-deposited
 
 			m_pPeers[0].AddOutput(m_Trans, valAsset, m_Kdf, &aid); // output UTXO to consume the created asset
 
@@ -1230,16 +1233,154 @@ struct TransactionMaker
 		lstTrg.push_back(std::move(pKrn));
 	}
 
-	void AddInput(int i, Amount val)
+
+	void CreateTxKernelWithAsset(std::vector<beam::TxKernel::Ptr>& lstTrg, Amount fee, std::vector<beam::TxKernel::Ptr>& lstNested, bool bNested, Scalar::Native skAsset, const beam::AssetID &aid, const beam::AmountSigned amount)
 	{
-		m_pPeers[i].AddInput(m_Trans, val, m_Kdf);
+		std::unique_ptr<beam::TxKernel> pKrn(new beam::TxKernel);
+		pKrn->m_Fee = fee;
+		pKrn->m_CanEmbed = bNested;
+		pKrn->m_vNested.swap(lstNested);
+
+		// hashlock
+		pKrn->m_pHashLock.reset(new beam::TxKernel::HashLock);
+
+		uintBig hlPreimage;
+		SetRandom(hlPreimage);
+
+		Hash::Value hvLockImage;
+		Hash::Processor() << hlPreimage >> hvLockImage;
+
+		if (amount != 0)
+		{
+			std::unique_ptr<beam::TxKernel> pKrnEmission(new beam::TxKernel);
+			pKrnEmission->m_AssetEmission = amount; // if amount is negative, will burn token
+			pKrnEmission->m_Commitment.m_X = aid;
+			pKrnEmission->m_Commitment.m_Y = 0;
+			// if we use another signature to fake the result, tx will be invalid
+			// SetRandom(skAsset);
+
+			// FIXME: will recalculate m_Commitment 
+			pKrnEmission->Sign(skAsset);
+			lstTrg.push_back(std::move(pKrnEmission));
+
+			// FIXME: 这里不区分emit或burn？ 
+			skAsset = -skAsset;
+			m_pPeers[0].m_k += skAsset;
+		}
+
+		CoSignKernel(*pKrn, hvLockImage);
+
+		Point::Native exc;
+		beam::AmountBig::Type fee2;
+		verify_test(!pKrn->IsValid(g_hFork, fee2, exc)); // should not pass validation unless correct hash preimage is specified
+
+		// finish HL: add hash preimage
+		pKrn->m_pHashLock->m_Preimage = hlPreimage;
+		verify_test(pKrn->IsValid(g_hFork, fee2, exc));
+
+		lstTrg.push_back(std::move(pKrn));
 	}
 
-	void AddOutput(int i, Amount val)
+	void CreateTxKernelWithSk(std::vector<beam::TxKernel::Ptr>& lstTrg, Amount fee, std::vector<beam::TxKernel::Ptr>& lstNested, bool bBurnCustomTag, bool bNested, Scalar::Native skAsset, const beam::AssetID &aid, const Amount amount)
 	{
-		m_pPeers[i].AddOutput(m_Trans, val, m_Kdf);
+		std::unique_ptr<beam::TxKernel> pKrn(new beam::TxKernel);
+		pKrn->m_Fee = fee;
+		pKrn->m_CanEmbed = bNested;
+		pKrn->m_vNested.swap(lstNested);
+
+		// hashlock
+		pKrn->m_pHashLock.reset(new beam::TxKernel::HashLock);
+
+		uintBig hlPreimage;
+		SetRandom(hlPreimage);
+
+		Hash::Value hvLockImage;
+		Hash::Processor() << hlPreimage >> hvLockImage;
+
+		if (bBurnCustomTag)
+		{
+			// emit some asset
+			// Scalar::Native skAsset;
+			// beam::AssetID aid;
+			// ray: 如果deposit为true，下面这2个值必须相同， 否则交易验证不通过。
+			// TODO: 这个与m_ipp有关系，后面再调查
+			Amount valAsset = amount;
+			// Amount mainAsset = amount;
+
+			// SetRandom(skAsset);
+			// Sk2Pk 有副作用，会修改skAsset
+			// beam::proto::Sk2Pk(aid, skAsset);
+			// verify_test(aid == assetID);
+
+			// if (beam::Rules::get().CA.Deposit)
+			// 	m_pPeers[0].AddInput(m_Trans, mainAsset, m_Kdf); // input being-deposited
+
+			// m_pPeers[0].AddOutput(m_Trans, valAsset, m_Kdf, &aid); // output UTXO to consume the created asset
+
+			std::unique_ptr<beam::TxKernel> pKrnEmission(new beam::TxKernel);
+			pKrnEmission->m_AssetEmission = -valAsset;
+			pKrnEmission->m_Commitment.m_X = aid;
+			pKrnEmission->m_Commitment.m_Y = 0;
+			pKrnEmission->Sign(skAsset);
+
+			lstTrg.push_back(std::move(pKrnEmission));
+
+			// TODO: 这里不知道什么原因，虽然是消耗了input，但是依然和增加output一样
+			skAsset = -skAsset;
+			m_pPeers[0].m_k += skAsset;
+		}
+
+		CoSignKernel(*pKrn, hvLockImage);
+
+		Point::Native exc;
+		beam::AmountBig::Type fee2;
+		verify_test(!pKrn->IsValid(g_hFork, fee2, exc)); // should not pass validation unless correct hash preimage is specified
+
+		// finish HL: add hash preimage
+		pKrn->m_pHashLock->m_Preimage = hlPreimage;
+		verify_test(pKrn->IsValid(g_hFork, fee2, exc));
+
+		lstTrg.push_back(std::move(pKrn));
+	}
+
+	void AddInput(int i, Amount val, const beam::AssetID* pAssetID = nullptr)
+	{
+		m_pPeers[i].AddInput(m_Trans, val, m_Kdf, pAssetID);
+	}
+
+	void AddOutput(int i, Amount val, const beam::AssetID* pAssetID = nullptr)
+	{
+		m_pPeers[i].AddOutput(m_Trans, val, m_Kdf, pAssetID);
 	}
 };
+
+void GetAssetID(Scalar::Native &sk, beam::AssetID &aid)
+{
+	// FIXME: Use current time as seed for testing only
+	srand((unsigned)time(NULL)); 
+	// Create KDF
+	HKdf skdf;
+	uintBig seed;
+
+	SetRandom(seed);
+	skdf.Generate(seed);
+	
+	// Hash::Value hv;
+	// Hash::Processor() << "testca_kdf" >> hv;
+
+	// Scalar::Native sk0, sk1;
+	// skdf.DerivePKey(sk0, hv);
+
+	// Point::Native pk0;
+	// skdf.DerivePKeyG(pk0, hv);
+	auto kid = Key::ID(1234, Key::Type::Regular);
+	skdf.IKdf::DeriveKey(sk, kid);
+
+	beam::proto::Sk2Pk(aid, sk);
+
+	std::cout << "aid = " << aid << "\n";
+	
+}
 
 void TestTransaction()
 {
@@ -1268,6 +1409,115 @@ void TestTransaction()
 	ctx.m_Height.m_Min = g_hFork;
 	verify_test(tm.m_Trans.IsValid(ctx));
 	verify_test(ctx.m_Fee == beam::AmountBig::Type(fee1 + fee2));
+}
+
+void TestCATransfer()
+{
+	TransactionMaker tm;
+	// Use main token for fee
+	Amount fee = 10;
+	tm.AddInput(0, 1000);
+	tm.AddOutput(1, 990);
+
+	std::vector<beam::TxKernel::Ptr> lstNested, lstDummy;
+	// Notice: we can also avoid nested kernel
+	tm.CreateTxKernel(tm.m_Trans.m_vKernels, fee, lstDummy, false, false);
+
+	// Transfer confidential asset with custom id
+	Scalar::Native skAsset;
+	beam::AssetID aid;
+	Amount valAsset = 100;
+
+	GetAssetID(skAsset, aid);
+	// SetRandom(skAsset);
+	// beam::proto::Sk2Pk(aid, skAsset);
+
+	tm.AddInput(0, valAsset, &aid);
+	tm.AddOutput(1, valAsset, &aid);
+
+	tm.CreateTxKernel(tm.m_Trans.m_vKernels, 0, lstDummy, false, false);
+	
+	tm.m_Trans.Normalize();
+
+	beam::TxBase::Context::Params pars;
+	beam::TxBase::Context ctx(pars);
+	ctx.m_Height.m_Min = g_hFork;
+	
+	verify_test(tm.m_Trans.IsValid(ctx));
+	verify_test(ctx.m_Fee == beam::AmountBig::Type(fee));
+}
+
+void TestCACirculation(bool emit)
+{
+	// Do emit
+	bool deposit = beam::Rules::get().CA.Deposit;
+	// Disable deposit beam for confidential asset
+	beam::Rules::get().CA.Deposit = false;
+
+	TransactionMaker tm;
+	// Use main token for fee
+	Amount fee = 10;
+	tm.AddInput(0, 1000);
+	tm.AddOutput(1, 990);
+
+	std::vector<beam::TxKernel::Ptr> lstNested, lstDummy;
+	// tm.CreateTxKernel(lstNested, fee, lstDummy, false, true);
+
+	// Burn confidential asset with custom id
+	Scalar::Native skAsset;
+	beam::AssetID aid;
+	GetAssetID(skAsset, aid);
+	
+	// FIXME: 
+	// valAsset < valChange 则为增发
+	// valAsset > valChange 则为销毁
+	// valAsset == valChange 则为普通转账
+	// fee = 0;
+	if (emit)
+	{
+		beam::AmountSigned valAsset = 0;
+		beam::AmountSigned valChange = valAsset+1000;
+
+		// SetRandom(skAsset);
+		// beam::proto::Sk2Pk(aid, skAsset);
+
+		// tm.AddInput(0, valAsset, &aid);
+		tm.AddOutput(0, valChange, &aid);
+
+		tm.CreateTxKernelWithAsset(tm.m_Trans.m_vKernels, fee, lstNested, false, skAsset, aid, valChange - valAsset);
+	}
+	else
+	{
+		beam::AmountSigned valAsset = 4431;
+		beam::AmountSigned valChange = emit ? (valAsset+1000) : (valAsset - 1000);
+
+		// SetRandom(skAsset);
+		// beam::proto::Sk2Pk(aid, skAsset);
+
+		tm.AddInput(0, valAsset, &aid);
+		tm.AddOutput(0, valChange, &aid);
+
+		tm.CreateTxKernelWithAsset(tm.m_Trans.m_vKernels, fee, lstNested, false, skAsset, aid, valChange - valAsset);
+	}
+	
+	tm.m_Trans.Normalize();
+
+	beam::TxBase::Context::Params pars;
+	beam::TxBase::Context ctx(pars);
+	ctx.m_Height.m_Min = g_hFork;
+	
+	verify_test(tm.m_Trans.IsValid(ctx));
+	verify_test(ctx.m_Fee == beam::AmountBig::Type(fee));
+
+	// restore deposit flag
+	beam::Rules::get().CA.Deposit = deposit;
+}
+
+void TestCA()
+{
+	TestCATransfer();
+	TestCACirculation(true);
+	TestCACirculation(false);
 }
 
 struct IHWWallet
@@ -2539,8 +2789,9 @@ int main()
 
 	beam::Rules::get().CA.Enabled = true;
 	beam::Rules::get().pForks[1].m_Height = g_hFork;
-	ECC::TestAll();
-	ECC::RunBenchmark();
+	// ECC::TestAll();
+	// ECC::RunBenchmark();
+	ECC::TestCA();
 
 	secp256k1_context_destroy(g_psecp256k1);
 

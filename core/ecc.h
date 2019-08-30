@@ -49,6 +49,7 @@ namespace ECC
 	// Syntactic sugar!
 	using beam::Zero_;
 	using beam::Zero;
+
 	enum Two_ { Two };
 
 	struct Op

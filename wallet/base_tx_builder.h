@@ -30,15 +30,16 @@ namespace beam::wallet
     public:
         BaseTxBuilder(BaseTransaction& tx, SubTxID subTxID, const AmountList& amount, Amount fee);
 
-        void SelectInputs();
-        void AddChange();
+        virtual void SelectInputs();
+        virtual void AddChange();
         void GenerateNewCoin(Amount amount, bool bChange);
-        bool CreateOutputs();
+        virtual void GenerateNewCoinList(bool bChange);
+        virtual bool CreateOutputs();
         bool FinalizeOutputs();
         bool LoadKernel();
         bool HasKernelID() const;
-        void CreateKernel();
-        void GenerateOffset();
+        virtual void CreateKernel();
+        virtual void GenerateOffset();
         void GenerateNonce();
         virtual ECC::Point::Native GetPublicExcess() const;
         ECC::Point::Native GetPublicNonce() const;
@@ -49,10 +50,10 @@ namespace beam::wallet
         bool GetPeerSignature();
         bool GetPeerInputsAndOutputs();
         void FinalizeSignature();
-        bool CreateInputs();
+        virtual bool CreateInputs();
         void FinalizeInputs();
         virtual Transaction::Ptr CreateTransaction();
-        void SignPartial();
+        virtual void SignPartial();
         bool IsPeerSignatureValid() const;
 
         Amount GetAmount() const;
@@ -76,6 +77,9 @@ namespace beam::wallet
 
         const std::vector<Coin::ID>& GetInputCoins() const;
         const std::vector<Coin::ID>& GetOutputCoins() const;
+
+        virtual Amount GetAssetAmount() const { return 0; }
+        virtual AssetID GetAssetID() const { return Zero; }
 
     protected:
         BaseTransaction& m_Tx;

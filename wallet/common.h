@@ -32,6 +32,16 @@ namespace beam::wallet
         ALL
     };
 
+    // Definitions for asset commands
+    enum class AssetCommand : uint8_t
+    {
+        Zero,
+        Issue,
+        Transfer,
+        Burn,
+        All
+    };
+
     using TxID = std::array<uint8_t, 16>;
     const Height kDefaultTxLifetime = 2 * 60;
     const Height kDefaultTxResponseTime = 12 * 60;
@@ -160,6 +170,10 @@ namespace beam::wallet
         Amount m_amount=0;
         Amount m_fee=0;
         Amount m_change=0;
+        AssetCommand m_assetCommand = AssetCommand::Zero;
+        Amount m_assetAmount = 0;
+        AssetID m_assetID = Zero;
+        
         Height m_minHeight=0;
         WalletID m_peerId = Zero;
         WalletID m_myId = Zero;
@@ -288,6 +302,15 @@ namespace beam::wallet
 
         PeerLockImage = 115,
 
+        // FIXME: to avoid conflict with others
+        AssetCommand = 116,
+        AssetID = 117,
+        AssetAmount = 118,
+        AssetAmountList = 119,
+        AssetOutputCoins = 120,
+        AssetInputs = 121,
+        AssetOutputs = 122,
+
         // private parameters
         PrivateFirstParam = 128,
 
@@ -326,6 +349,7 @@ namespace beam::wallet
         AtomicSwapSecretPublicKey = 203,
 
         InternalFailureReason = 210,
+        AssetKIDIndex = 220,  // should after PrivateFirstParam 
     
         State = 255
 
