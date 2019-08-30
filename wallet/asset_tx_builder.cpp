@@ -105,9 +105,9 @@ void AssetTxBuilder::GenerateNewCoin(Amount amount, bool bChange)
         newUtxo.m_ID.m_Type = Key::Type::Change;
     }
     m_Tx.GetWalletDB()->storeCoin(newUtxo);
-    m_AssetOutputCoins.push_back(newUtxo.m_ID);
+    m_OutputCoins.push_back(Asset{ newUtxo.m_ID, newUtxo.m_assetID });
     // FIXME: 
-    m_Tx.SetParameter(TxParameterID::AssetOutputCoins, m_AssetOutputCoins, false, m_SubTxID);
+    m_Tx.SetParameter(TxParameterID::OutputCoins, m_OutputCoins, false, m_SubTxID);
 }
 
 void AssetTxBuilder:: GenerateNewCoinList(bool bChange)
@@ -127,34 +127,12 @@ void AssetTxBuilder::GenerateOffset()
 
 bool AssetTxBuilder::CreateOutputs()
 {
-    BaseTxBuilder::CreateOutputs();
-
-    if (GetAssetOutputs() || GetAssetOutputCoins().empty())
-    {
-        return false;
-    }
-
-    auto thisHolder = shared_from_this();
-    auto txHolder = m_Tx.shared_from_this(); // increment use counter of tx object. We use it to avoid tx object desctruction during Update call.
-    m_Tx.GetAsyncAcontext().OnAsyncStarted();
-    m_Tx.GetKeyKeeper()->GenerateOutputs(m_MinHeight, m_AssetOutputCoins,
-        [thisHolder, this, txHolder](auto &&result) {
-            m_AssetOutputs = move(result);
-            FinalizeAssetOutputs();
-            m_Tx.Update(); // may complete tranasction
-            m_Tx.GetAsyncAcontext().OnAsyncFinished();
-        },
-        [thisHolder, this, txHolder](const exception &) {
-            //m_Tx.Update();
-            m_Tx.GetAsyncAcontext().OnAsyncFinished();
-        },
-        m_AssetID);
-    return true; // true if async
+    return BaseTxBuilder::CreateOutputs();
 }
 
 bool AssetTxBuilder::FinalizeAssetOutputs()
 {
-    m_Tx.SetParameter(TxParameterID::AssetOutputs, m_AssetOutputs, false, m_SubTxID);
+    // m_Tx.SetParameter(TxParameterID::AssetOutputs, m_AssetOutputs, false, m_SubTxID);
 
     // TODO: check transaction size here
 
@@ -163,27 +141,12 @@ bool AssetTxBuilder::FinalizeAssetOutputs()
 
 bool AssetTxBuilder::CreateInputs()
 {
-    bool ret = BaseTxBuilder::CreateInputs();
-
-    if (GetAssetInputs() || GetAssetInputCoins().empty())
-    {
-        return false;
-    }
-
-    auto commitments = m_Tx.GetKeyKeeper()->GeneratePublicKeysSync(m_AssetInputCoins, true, &m_AssetID);
-    m_Inputs.reserve(commitments.size());
-    for (const auto &commitment : commitments)
-    {
-        auto &input = m_AssetInputs.emplace_back(make_unique<Input>());
-        input->m_Commitment = commitment;
-    }
-    FinalizeAssetInputs();
-    return false; // true if async operation has run
+    return BaseTxBuilder::CreateInputs();
 }
 
 void AssetTxBuilder::FinalizeAssetInputs()
 {
-    m_Tx.SetParameter(TxParameterID::AssetInputs, m_AssetInputs, false, m_SubTxID);
+    // m_Tx.SetParameter(TxParameterID::AssetInputs, m_AssetInputs, false, m_SubTxID);
 }
 
 bool AssetTxBuilder::FinalizeOutputs()
@@ -219,12 +182,14 @@ const std::vector<Coin::ID> &AssetTxBuilder::GetAssetOutputCoins() const
 
 ECC::Point::Native AssetTxBuilder::GetPublicExcess() const
 {
+    // TODO: for issuing only
     Scalar::Native sk;
     GetSK(sk);
     Point::Native pt = Context::get().G * sk;
     // FIXME: 
     pt = -pt;
-
+    LOG_INFO() << "SKASSET: " << sk;
+    // return BaseTxBuilder::GetPublicExcess();
     return BaseTxBuilder::GetPublicExcess() + pt;
 }
  
@@ -320,6 +285,7 @@ void AssetTxBuilder::CreateKernel()
         GetSK(sk);
         m_EmissionKernel->Sign(sk);
 
+        LOG_INFO() << "Created emission kernel with amount " << assetAmount << " for asset id " << m_AssetID;
         // lstTrg.push_back(std::move(pKrnEmission));
         // // FIXME: 这里不区分emit或burn？
         // skAsset = -skAsset;
@@ -334,7 +300,6 @@ void AssetTxBuilder::CreateKernel()
 
 void AssetTxBuilder::SignPartial()
 {
-    // TODO:
     return BaseTxBuilder::SignPartial();
 }
 

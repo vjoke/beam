@@ -238,6 +238,8 @@ namespace detail
 			return ar;
 		}
 
+		
+
 		/// ECC::Signature serialization
         template<typename Archive>
         static Archive& save(Archive& ar, const ECC::Signature& val)
@@ -519,6 +521,27 @@ namespace detail
         /// Common Beam serialization adapters
         ///////////////////////////////////////////////////////////
 
+		/// beam::Asset serialization
+		template<typename Archive>
+		static Archive& save(Archive& ar, const beam::Asset& asset)
+		{
+			ar
+				& asset.m_IDV
+				& asset.m_AssetID;
+
+			return ar;
+		}
+
+		template<typename Archive>
+		static Archive& load(Archive& ar, beam::Asset& asset)
+		{
+			ar
+				& asset.m_IDV
+				& asset.m_AssetID;
+
+			return ar;
+		}
+		
         /// beam::Input serialization
         template<typename Archive>
         static Archive& save(Archive& ar, const beam::Input& input)

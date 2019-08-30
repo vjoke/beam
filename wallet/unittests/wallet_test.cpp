@@ -1154,10 +1154,15 @@ namespace
         // auto txId = sender.m_Wallet.transfer_money(sender.m_WalletID, sender.m_WalletID, 24, 2, true, 200);
         Scalar::Native skAsset;
 		beam::AssetID assetID;
-		SetRandom(skAsset);
-		beam::proto::Sk2Pk(assetID, skAsset);
+		// SetRandom(skAsset);
 
-        auto txId = sender.m_Wallet.issue_asset(sender.m_WalletID, 1000, 1234, 2, true, 200);
+        uint64_t kid = 1234;
+        senderWalletDB->get_MasterKdf()->DeriveKey(skAsset, kid);
+		beam::proto::Sk2Pk(assetID, skAsset);
+        LOG_INFO() << "skAsset: " << skAsset;
+
+        Amount assetAmount = 1000;
+        auto txId = sender.m_Wallet.issue_asset(sender.m_WalletID, assetAmount, kid, 2, true, 200);
 
         mainReactor->run();
         sw.stop();
@@ -1172,7 +1177,7 @@ namespace
         WALLET_CHECK(txHistory[0].m_change == 38);
         WALLET_CHECK(txHistory[0].m_fee == 2);
         // asset related
-        WALLET_CHECK(txHistory[0].m_assetAmount == 1000);
+        WALLET_CHECK(txHistory[0].m_assetAmount == assetAmount);
         WALLET_CHECK(txHistory[0].m_assetID == assetID);
         WALLET_CHECK(txHistory[0].m_assetCommand == AssetCommand::Issue);
 
@@ -1199,7 +1204,7 @@ namespace
 
         WALLET_CHECK(newSenderCoins[2].m_ID.m_Type == Key::Type::Regular);
         WALLET_CHECK(newSenderCoins[2].m_status == Coin::Available);
-        WALLET_CHECK(newSenderCoins[2].m_ID.m_Value == 1000);
+        WALLET_CHECK(newSenderCoins[2].m_ID.m_Value == assetAmount);
         WALLET_CHECK(newSenderCoins[2].m_assetID == assetID);
 
         cout << "\nFinish of testing issuing asset to himself...\n";
@@ -1586,9 +1591,9 @@ int main()
 	Rules::get().pForks[1].m_Height = 100500; // needed for lightning network to work
     Rules::get().UpdateChecksum();
 
-    // TestIssueAsset();
-    // // early quit
-    // return 0;
+    TestIssueAsset();
+    // early quit
+    return 0;
 
 	TestNegotiation();
 

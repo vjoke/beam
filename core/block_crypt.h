@@ -31,6 +31,12 @@ namespace beam
 	typedef uint64_t TxoID;
 
 	using ECC::Key;
+	
+	struct Asset
+    {
+        Key::IDV m_IDV;
+        AssetID m_AssetID;
+    };
 
 	namespace MasterKey
 	{

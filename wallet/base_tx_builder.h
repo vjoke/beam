@@ -75,8 +75,8 @@ namespace beam::wallet
         ECC::Hash::Value GetLockImage() const;
         SubTxID GetSubTxID() const;
 
-        const std::vector<Coin::ID>& GetInputCoins() const;
-        const std::vector<Coin::ID>& GetOutputCoins() const;
+        const std::vector<Asset>& GetInputCoins() const;
+        const std::vector<Asset>& GetOutputCoins() const;
 
         virtual Amount GetAssetAmount() const { return 0; }
         virtual AssetID GetAssetID() const { return Zero; }
@@ -96,8 +96,8 @@ namespace beam::wallet
         std::vector<Output::Ptr> m_Outputs;
         ECC::Scalar::Native m_Offset; // goes to offset
 
-        std::vector<Coin::ID> m_InputCoins;
-        std::vector<Coin::ID> m_OutputCoins;
+        std::vector<Asset> m_InputCoins;
+        std::vector<Asset> m_OutputCoins;
         size_t m_NonceSlot = 0;
         ECC::Point::Native m_PublicNonce;
 

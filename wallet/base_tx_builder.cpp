@@ -89,7 +89,7 @@ namespace beam::wallet
         {
             coin.m_spentTxId = m_Tx.GetTxID();
             total += coin.m_ID.m_Value;
-            m_InputCoins.push_back(coin.m_ID);
+            m_InputCoins.push_back(Asset{ coin.m_ID, coin.m_assetID });
         }
 
         m_Change += total - amountWithFee;
@@ -118,7 +118,7 @@ namespace beam::wallet
             newUtxo.m_ID.m_Type = Key::Type::Change;
         }
         m_Tx.GetWalletDB()->storeCoin(newUtxo);
-        m_OutputCoins.push_back(newUtxo.m_ID);
+        m_OutputCoins.push_back(Asset{ newUtxo.m_ID, Zero });
         m_Tx.SetParameter(TxParameterID::OutputCoins, m_OutputCoins, false, m_SubTxID);
     }
 
@@ -261,14 +261,14 @@ namespace beam::wallet
         Amount amount = 0;
         for (const auto& cid : m_InputCoins)
         {
-            amount += cid.m_Value;
+            amount += cid.m_IDV.m_Value;
         }
         AmountBig::AddTo(publicAmount, amount);
         amount = 0;
         publicAmount = -publicAmount;
         for (const auto& cid : m_OutputCoins)
         {
-            amount += cid.m_Value;
+            amount += cid.m_IDV.m_Value;
         }
         AmountBig::AddTo(publicAmount, amount);
 
@@ -608,12 +608,12 @@ namespace beam::wallet
         return m_PeerMaxHeight < MaxHeight&& m_PeerMaxHeight <= maxAcceptableHeight;
     }
 
-    const std::vector<Coin::ID>& BaseTxBuilder::GetInputCoins() const
+    const std::vector<Asset>& BaseTxBuilder::GetInputCoins() const
     {
         return m_InputCoins;
     }
 
-    const std::vector<Coin::ID>& BaseTxBuilder::GetOutputCoins() const
+    const std::vector<Asset>& BaseTxBuilder::GetOutputCoins() const
     {
         return m_OutputCoins;
     }
