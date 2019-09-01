@@ -1292,23 +1292,21 @@ namespace
             // check Tx
             auto txHistory = senderWalletDB->getTxHistory();
             WALLET_CHECK(txHistory.size() == 3);
-            // TODO:
-            return;
-            
-            WALLET_CHECK(txHistory[0].m_txId == txId);
-            WALLET_CHECK(txHistory[0].m_amount == 0);
-            WALLET_CHECK(txHistory[0].m_change == 36);
-            WALLET_CHECK(txHistory[0].m_fee == 2);
+            uint i = 1; 
+            WALLET_CHECK(txHistory[i].m_txId == txId);
+            WALLET_CHECK(txHistory[i].m_amount == 0);
+            WALLET_CHECK(txHistory[i].m_change == 34);
+            WALLET_CHECK(txHistory[i].m_fee == 2);
             // asset related
-            cout << "Burn asset history " << txHistory[0].m_assetAmount << "\n";
-            cout << "Burn asset history " << txHistory[0].m_assetID << "\n";
-            cout << "Burn asset history " << (int)(txHistory[0].m_assetCommand) << "\n";
+            cout << "Burn asset history " << txHistory[i].m_assetAmount << "\n";
+            cout << "Burn asset history " << txHistory[i].m_assetID << "\n";
+            cout << "Burn asset history " << (int)(txHistory[i].m_assetCommand) << "\n";
 
-            WALLET_CHECK(txHistory[0].m_assetAmount == assetAmount);
-            WALLET_CHECK(txHistory[0].m_assetID == assetID);
-            WALLET_CHECK(txHistory[0].m_assetCommand == AssetCommand::Transfer);
+            WALLET_CHECK(txHistory[i].m_assetAmount == assetAmount);
+            WALLET_CHECK(txHistory[i].m_assetID == assetID);
+            WALLET_CHECK(txHistory[i].m_assetCommand == AssetCommand::Burn);
 
-            WALLET_CHECK(txHistory[0].m_status == TxStatus::Completed);
+            WALLET_CHECK(txHistory[i].m_status == TxStatus::Completed);
 
             // check coins
             vector<Coin> newSenderCoins;
@@ -1317,7 +1315,7 @@ namespace
                 return true;
             });
 
-            WALLET_CHECK(newSenderCoins.size() == (3+3));
+            WALLET_CHECK(newSenderCoins.size() == (3+3+2));
 
             WALLET_CHECK(newSenderCoins[0].m_ID.m_Type == Key::Type::Coinbase);
             WALLET_CHECK(newSenderCoins[0].m_status == Coin::Spent);
@@ -1332,14 +1330,14 @@ namespace
             WALLET_CHECK(newSenderCoins[2].m_status == Coin::Spent);
             WALLET_CHECK(newSenderCoins[2].m_ID.m_Value == 1000); //TODO
             WALLET_CHECK(newSenderCoins[2].m_assetID == assetID);
-            // new coins
+            // spent coins
             WALLET_CHECK(newSenderCoins[3].m_ID.m_Type == Key::Type::Change);
-            WALLET_CHECK(newSenderCoins[3].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[3].m_status == Coin::Spent);
             WALLET_CHECK(newSenderCoins[3].m_ID.m_Value == 36);
             WALLET_CHECK(newSenderCoins[3].m_assetID == Zero);
 
             WALLET_CHECK(newSenderCoins[4].m_ID.m_Type == Key::Type::Change);
-            WALLET_CHECK(newSenderCoins[4].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[4].m_status == Coin::Spent);
             WALLET_CHECK(newSenderCoins[4].m_ID.m_Value == 700);
             WALLET_CHECK(newSenderCoins[4].m_assetID == assetID);
 
@@ -1347,6 +1345,16 @@ namespace
             WALLET_CHECK(newSenderCoins[5].m_status == Coin::Available);
             WALLET_CHECK(newSenderCoins[5].m_ID.m_Value == 300); //TODO
             WALLET_CHECK(newSenderCoins[5].m_assetID == assetID);
+            // new coins
+            WALLET_CHECK(newSenderCoins[6].m_ID.m_Type == Key::Type::Change);
+            WALLET_CHECK(newSenderCoins[6].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[6].m_ID.m_Value == 34);
+            WALLET_CHECK(newSenderCoins[6].m_assetID == Zero);
+
+            WALLET_CHECK(newSenderCoins[7].m_ID.m_Type == Key::Type::Change);
+            WALLET_CHECK(newSenderCoins[7].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[7].m_ID.m_Value == 100);
+            WALLET_CHECK(newSenderCoins[7].m_assetID == assetID);
         }
 
     }

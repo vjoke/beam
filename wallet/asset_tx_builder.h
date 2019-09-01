@@ -36,15 +36,7 @@ namespace beam::wallet
         virtual bool CreateInputs();
         bool FinalizeOutputs(); 
         bool GetPeerInputsAndOutputs();
-        // virtual const AmountList& GetAmountList() const;
         const AmountList& GetAssetAmountList() const;
-        void FinalizeAssetInputs();
-        bool FinalizeAssetOutputs();
-
-        bool GetAssetInputs();
-        bool GetAssetOutputs();
-        const std::vector<Coin::ID>& GetAssetInputCoins() const;
-        const std::vector<Coin::ID>& GetAssetOutputCoins() const;
 
         virtual Amount GetAssetAmount() const;
         virtual AssetID GetAssetID() const { return m_AssetID; }
@@ -59,18 +51,9 @@ namespace beam::wallet
         Amount m_AssetChange;
         AssetCommand m_AssetCommand;
 
-        std::vector<Input::Ptr> m_AssetInputs;
-        std::vector<Output::Ptr> m_AssetOutputs;
-        ECC::Scalar::Native m_AssetOffset; // goes to offset
-
-        std::vector<Coin::ID> m_AssetInputCoins;
-        std::vector<Coin::ID> m_AssetOutputCoins;
-
         TxKernel::Ptr m_AssetKernel;
         TxKernel::Ptr m_EmissionKernel;
         mutable boost::optional<Merkle::Hash> m_AssetKernelID;
-
-        ECC::Scalar::Native m_IssuedBlindingFactor;
 
         void GetSK(ECC::Scalar::Native &sk) const;
         void SelectAssetInputs();
