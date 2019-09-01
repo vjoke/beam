@@ -25,12 +25,16 @@ using namespace std;
 namespace beam::wallet
 {
 AssetTxBuilder::AssetTxBuilder(BaseTransaction &tx, SubTxID subTxID, Amount fee, const AmountList &assetAmountList, AssetID assetID)
-    : BaseTxBuilder(tx, subTxID, {}, fee), m_AssetAmountList{assetAmountList}, m_AssetID{assetID}, m_AssetChange{0}
+    : BaseTxBuilder(tx, subTxID, {}, fee), 
+    m_AssetAmountList{assetAmountList}, m_AssetID{assetID}, m_AssetChange{0}, m_AssetCommand{AssetCommand::Zero},
+    m_IssuedBlindingFactor{Zero}
 {
     if (m_AssetAmountList.empty())
     {
         m_Tx.GetParameter(TxParameterID::AssetAmountList, m_AssetAmountList, m_SubTxID);
     }
+
+    m_AssetCommand = m_Tx.GetMandatoryParameter<AssetCommand>(TxParameterID::AssetCommand, m_SubTxID);
 }
 
 
@@ -56,9 +60,7 @@ void AssetTxBuilder::SelectInputs()
         throw TransactionFailedException(true, TxFailureReason::InvalidTransaction);
     }
 
-    auto assetCommand = m_Tx.GetMandatoryParameter<AssetCommand>(TxParameterID::AssetCommand, m_SubTxID);
-    
-    switch (assetCommand) {
+    switch (m_AssetCommand) {
         case AssetCommand::Issue:
         {
             LOG_INFO() << m_Tx.GetTxID() << " issues asset " << GetAssetAmount() << " with asset id: " << assetID;
@@ -76,7 +78,7 @@ void AssetTxBuilder::SelectInputs()
         break;
         default:
         {
-            LOG_ERROR() << m_Tx.GetTxID() << " invalid asset command: " << uint8_t(assetCommand);
+            LOG_ERROR() << m_Tx.GetTxID() << " invalid asset command: " << int(m_AssetCommand);
             throw TransactionFailedException(true, TxFailureReason::InvalidTransaction);
         }
         break;
@@ -86,6 +88,7 @@ void AssetTxBuilder::SelectInputs()
 
 void AssetTxBuilder::AddChange()
 {
+    LOG_INFO() << "AssetTxBuilder::AddChange with change: " << m_Change << " assetChange: " << m_AssetChange;
     BaseTxBuilder::AddChange();
     if (m_AssetChange == 0)
     {
@@ -108,6 +111,15 @@ void AssetTxBuilder::GenerateNewCoin(Amount amount, bool bChange)
     m_OutputCoins.push_back(Asset{ newUtxo.m_ID, newUtxo.m_assetID });
     // FIXME: 
     m_Tx.SetParameter(TxParameterID::OutputCoins, m_OutputCoins, false, m_SubTxID);
+    for (const auto &coin : m_OutputCoins)
+    {
+        LOG_INFO() << "AssetTxBuilder::GenerateNewCoin result " << coin.m_AssetID;
+    }
+
+    if (AssetCommand::Issue == m_AssetCommand && m_IssuedBlindingFactor == Zero)
+    {
+        SwitchCommitment(&m_AssetID).Create(m_IssuedBlindingFactor, *m_Tx.GetWalletDB()->get_ChildKdf(newUtxo.m_ID), newUtxo.m_ID);
+    }
 }
 
 void AssetTxBuilder:: GenerateNewCoinList(bool bChange)
@@ -121,7 +133,6 @@ void AssetTxBuilder:: GenerateNewCoinList(bool bChange)
 
 void AssetTxBuilder::GenerateOffset()
 {
-    // FIXME:
     BaseTxBuilder::GenerateOffset();
 }
 
@@ -182,15 +193,76 @@ const std::vector<Coin::ID> &AssetTxBuilder::GetAssetOutputCoins() const
 
 ECC::Point::Native AssetTxBuilder::GetPublicExcess() const
 {
-    // TODO: for issuing only
-    Scalar::Native sk;
-    GetSK(sk);
-    Point::Native pt = Context::get().G * sk;
-    // FIXME: 
-    pt = -pt;
-    LOG_INFO() << "SKASSET: " << sk;
-    // return BaseTxBuilder::GetPublicExcess();
-    return BaseTxBuilder::GetPublicExcess() + pt;
+    // PublicExcess = Sum(inputs) - Sum(outputs) - offset * G - (Sum(input amounts) - Sum(output amounts)) * H
+    Point::Native publicAmount = Zero;
+    Amount amount = 0;
+    // TODO: what if user create new asset coin in general tranfer tx?
+    for (const auto &cid : m_InputCoins)
+    {
+        if (cid.m_AssetID == beam::Zero)
+        {
+            amount += cid.m_IDV.m_Value;
+        }
+    }
+    AmountBig::AddTo(publicAmount, amount);
+    amount = 0;
+    publicAmount = -publicAmount;
+    for (const auto &cid : m_OutputCoins)
+    {
+        if (cid.m_AssetID == Zero)
+        {
+            amount += cid.m_IDV.m_Value;
+        }
+    }
+    AmountBig::AddTo(publicAmount, amount);
+
+    Point::Native publicExcess = Context::get().G * m_Offset;
+    {
+        Point::Native commitment;
+
+        for (const auto &output : m_Outputs)
+        {
+            // TODO: filter out asset
+            if (output->m_AssetID == Zero) 
+            {
+                if (commitment.Import(output->m_Commitment))
+                {
+                    publicExcess += commitment;
+                }
+            }
+            
+        }
+
+        publicExcess = -publicExcess;
+        for (const auto &input : m_Inputs)
+        {
+            if (commitment.Import(input->m_Commitment))
+            {
+                publicExcess += commitment;
+            }
+        }
+    }
+    publicExcess += publicAmount;
+
+    if (AssetCommand::Issue == m_AssetCommand)
+    {
+        Point::Native pt = Context::get().G * m_IssuedBlindingFactor;
+        // FIXME:
+        pt = -pt;
+
+        Scalar::Native sk;
+        GetSK(sk);
+        Point::Native pt2 = Context::get().G * sk;
+        pt2 = -pt2;
+
+        pt += pt2;
+
+        LOG_INFO() << "Ray ==> AssetTxBuilder::GetPublicExcess pt2: " << pt2;
+        LOG_INFO() << "Ray ==> AssetTxBuilder::GetPublicExcess blinding factor: " << m_IssuedBlindingFactor;
+        publicExcess += pt;
+    }
+
+    return publicExcess;
 }
  
 Transaction::Ptr AssetTxBuilder::CreateTransaction()
@@ -214,8 +286,10 @@ Transaction::Ptr AssetTxBuilder::CreateTransaction()
     // create transaction
     auto transaction = make_shared<Transaction>();
     if (m_EmissionKernel != nullptr) {
+        LOG_INFO() << "Emission Kernel commitment " << m_EmissionKernel->m_Commitment;
         transaction->m_vKernels.push_back(move(m_EmissionKernel));
     }
+    LOG_INFO() << "Kernel commitment " << m_Kernel->m_Commitment;
     transaction->m_vKernels.push_back(move(m_Kernel));
     // TODO: add asset input/outputs?
     transaction->m_Offset = m_Offset + m_PeerOffset;
@@ -242,65 +316,45 @@ void AssetTxBuilder::GetSK(ECC::Scalar::Native &sk) const
 void AssetTxBuilder::CreateKernel()
 {
     BaseTxBuilder::CreateKernel();
-    assert(m_Kernel);
-    // FIXME: embed it into asset kernel
-    // m_Kernel->m_CanEmbed = true;
-    // // create kernel for asset
-    // m_AssetKernel = make_unique<TxKernel>();
-    // m_AssetKernel->m_Fee = 0;
-    // m_AssetKernel->m_Height.m_Min = GetMinHeight();
-    // m_AssetKernel->m_Height.m_Max = GetMaxHeight();
-    // m_AssetKernel->m_Commitment = Zero;
-
-    // m_Tx.SetParameter(TxParameterID::MaxHeight, GetMaxHeight(), m_SubTxID);
-
-    // // FIXME: learn the meaning of lock images
-    // // load kernel's extra data
-    // Hash::Value peerLockImage;
-    // if (m_Tx.GetParameter(TxParameterID::PeerLockImage, peerLockImage, m_SubTxID))
-    // {
-    //     m_PeerLockImage = make_unique<Hash::Value>(move(peerLockImage));
-    // }
-
-    // uintBig preImage;
-    // if (m_Tx.GetParameter(TxParameterID::PreImage, preImage, m_SubTxID))
-    // {
-    //     m_AssetKernel->m_pHashLock = make_unique<TxKernel::HashLock>();
-    //     m_AssetKernel->m_pHashLock->m_Preimage = move(preImage);
-    // }
-
-    // m_AssetKernel->m_CanEmbed = false;
-    // // FIXME: move and swap usage?
-    // m_AssetKernel->m_vNested.push_back(std::move(m_Kernel)); 
     Amount assetAmount = GetAssetAmount();
-    // TODO: only for issue
-    if (assetAmount > 0) {
+    if (AssetCommand::Issue == m_AssetCommand && assetAmount > 0) {
         m_EmissionKernel = make_unique<TxKernel>();
         m_EmissionKernel->m_AssetEmission = assetAmount; // if amount is negative, will burn token
         m_EmissionKernel->m_Commitment.m_X = m_AssetID;
         m_EmissionKernel->m_Commitment.m_Y = 0;
         // TODO: avoid leak
-        
         Scalar::Native sk;
         GetSK(sk);
         m_EmissionKernel->Sign(sk);
 
         LOG_INFO() << "Created emission kernel with amount " << assetAmount << " for asset id " << m_AssetID;
         // lstTrg.push_back(std::move(pKrnEmission));
-        // // FIXME: 这里不区分emit或burn？
         // skAsset = -skAsset;
         // m_pPeers[0].m_k += skAsset;
     }
-    // assert(m_Kernel == nullptr);
-    // // FIXME: 
-    // m_Kernel.swap(m_AssetKernel);
-    // assert(m_AssetKernel == nullptr);
-    // assert(m_Kernel != nullptr);
 }
 
 void AssetTxBuilder::SignPartial()
 {
-    return BaseTxBuilder::SignPartial();
+    // create signature
+    Point::Native totalPublicExcess = GetPublicExcess();
+    totalPublicExcess += m_PeerPublicExcess;
+    LOG_INFO() << "Ray ==> AssetTxBuilder::SignPartial " << m_PeerPublicExcess;
+    m_Kernel->m_Commitment = totalPublicExcess;
+
+    m_Kernel->get_Hash(m_Message, m_PeerLockImage.get());
+    
+    auto offset = m_Offset; 
+    if (AssetCommand::Issue == m_AssetCommand) 
+    {
+        Scalar::Native sk;
+        GetSK(sk);
+        // for issue token only
+        offset += sk;
+    }
+    m_PartialSignature = m_Tx.GetKeyKeeper()->SignSync(m_InputCoins, m_OutputCoins, offset, m_NonceSlot, m_Message, GetPublicNonce() + m_PeerPublicNonce, totalPublicExcess);
+
+    StoreKernelID();
 }
 
 } // namespace beam::wallet

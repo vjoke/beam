@@ -281,6 +281,7 @@ namespace beam::wallet
         {
             SwitchCommitment(&coinID.m_AssetID).Create(blindingFactor, commitment, *GetChildKdf(coinID.m_IDV), coinID.m_IDV);
             excess += blindingFactor;
+            LOG_INFO() << "Ray ==> LocalPrivateKeyKeeper::GetExcess output blinding factor " << blindingFactor;
         }
         excess = -excess;
 

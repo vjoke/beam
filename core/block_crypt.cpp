@@ -502,7 +502,10 @@ namespace beam
 			ptExcNested += pt;
 
 			if (!m_Signature.IsValid(hv, ptExcNested))
+			{
+				std::cout << "Ray ==> Kernel::Travel commitment " << m_Commitment << " invalid signature\n";
 				return false;
+			}
 
 			*pExcess += pt;
 
@@ -539,7 +542,7 @@ namespace beam
 					val = -m_AssetEmission;
 					sc.m_hGen = -sc.m_hGen;
 				}
-
+				std::cout << "Ray ==> Kernel::Travel emit asset: " << val << "\n";
 				ECC::Tag::AddValue(*pExcess, &sc.m_hGen, val);
 			}
 		}

@@ -57,6 +57,7 @@ namespace beam::wallet
         AmountList m_AssetAmountList;
         AssetID m_AssetID;
         Amount m_AssetChange;
+        AssetCommand m_AssetCommand;
 
         std::vector<Input::Ptr> m_AssetInputs;
         std::vector<Output::Ptr> m_AssetOutputs;
@@ -68,6 +69,8 @@ namespace beam::wallet
         TxKernel::Ptr m_AssetKernel;
         TxKernel::Ptr m_EmissionKernel;
         mutable boost::optional<Merkle::Hash> m_AssetKernelID;
+
+        ECC::Scalar::Native m_IssuedBlindingFactor;
 
         void GetSK(ECC::Scalar::Native &sk) const;
     };

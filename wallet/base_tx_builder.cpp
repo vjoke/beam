@@ -369,6 +369,7 @@ namespace beam::wallet
         // create signature
         Point::Native totalPublicExcess = GetPublicExcess();
         totalPublicExcess += m_PeerPublicExcess;
+        LOG_INFO() << "Ray ==> BaseTxBuilder::SignPartial " << m_PeerPublicExcess; 
         m_Kernel->m_Commitment = totalPublicExcess;
 
         m_Kernel->get_Hash(m_Message, m_PeerLockImage.get());

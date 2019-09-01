@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #ifndef LOG_VERBOSE_ENABLED
-    #define LOG_VERBOSE_ENABLED 0
+    #define LOG_VERBOSE_ENABLED 1
 #endif
 
 #include "wallet/common.h"
@@ -1156,13 +1156,14 @@ namespace
 		beam::AssetID assetID;
 		// SetRandom(skAsset);
 
-        uint64_t kid = 1234;
+        uint64_t idx = 1234;
+        Key::ID kid = Key::ID(idx, Key::Type::Regular);
         senderWalletDB->get_MasterKdf()->DeriveKey(skAsset, kid);
 		beam::proto::Sk2Pk(assetID, skAsset);
-        LOG_INFO() << "skAsset: " << skAsset;
+        LOG_INFO() << "skAsset: " << skAsset  << " assetID: " << assetID;
 
         Amount assetAmount = 1000;
-        auto txId = sender.m_Wallet.issue_asset(sender.m_WalletID, assetAmount, kid, 2, true, 200);
+        auto txId = sender.m_Wallet.issue_asset(sender.m_WalletID, assetAmount, idx, 2, true, 200);
 
         mainReactor->run();
         sw.stop();
@@ -1177,6 +1178,10 @@ namespace
         WALLET_CHECK(txHistory[0].m_change == 38);
         WALLET_CHECK(txHistory[0].m_fee == 2);
         // asset related
+        cout << "Issue asset history " << txHistory[0].m_assetAmount << "\n";
+        cout << "Issue asset history " << txHistory[0].m_assetID << "\n";
+        cout << "Issue asset history " << (int)(txHistory[0].m_assetCommand) << "\n";
+        
         WALLET_CHECK(txHistory[0].m_assetAmount == assetAmount);
         WALLET_CHECK(txHistory[0].m_assetID == assetID);
         WALLET_CHECK(txHistory[0].m_assetCommand == AssetCommand::Issue);
@@ -1591,6 +1596,7 @@ int main()
 	Rules::get().pForks[1].m_Height = 100500; // needed for lightning network to work
     Rules::get().UpdateChecksum();
 
+    // TestTxToHimself();
     TestIssueAsset();
     // early quit
     return 0;

@@ -1958,7 +1958,16 @@ namespace beam::wallet
             case TxParameterID::IsSelfTx:
                 deserialize(txDescription.m_selfTx, parameter.m_value);
                 break;
-            // TODO: add asset related fields - by ray
+            // Add asset related fields
+            case TxParameterID::AssetAmount:
+                deserialize(txDescription.m_assetAmount, parameter.m_value);
+                break;
+            case TxParameterID::AssetID:
+                deserialize(txDescription.m_assetID, parameter.m_value);
+                break;
+            case TxParameterID::AssetCommand:
+                deserialize(txDescription.m_assetCommand, parameter.m_value);
+                break;
             default:
                 break; // suppress warning
             }
