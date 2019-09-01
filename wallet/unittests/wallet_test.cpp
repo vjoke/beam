@@ -1125,7 +1125,7 @@ namespace
         }
     }
 
-    void TestIssueAsset()
+    void TestHandleAsset()
     {
         cout << "\nTesting issuing Tx to himself...\n";
 
@@ -1149,70 +1149,206 @@ namespace
         TestNode node;
         TestWalletRig sender("sender", senderWalletDB, [](auto) { io::Reactor::get_Current().stop(); });
         helpers::StopWatch sw;
-
-        sw.start();
-        // auto txId = sender.m_Wallet.transfer_money(sender.m_WalletID, sender.m_WalletID, 24, 2, true, 200);
-        Scalar::Native skAsset;
-		beam::AssetID assetID;
-		// SetRandom(skAsset);
-
         uint64_t idx = 1234;
+        Scalar::Native skAsset;
+        beam::AssetID assetID;
+        // SetRandom(skAsset);
+
         Key::ID kid = Key::ID(idx, Key::Type::Regular);
         senderWalletDB->get_MasterKdf()->DeriveKey(skAsset, kid);
-		beam::proto::Sk2Pk(assetID, skAsset);
-        LOG_INFO() << "skAsset: " << skAsset  << " assetID: " << assetID;
-
-        Amount assetAmount = 1000;
-        auto txId = sender.m_Wallet.issue_asset(sender.m_WalletID, assetAmount, idx, 2, true, 200);
-
-        mainReactor->run();
-        sw.stop();
-
-        cout << "Issue asset elapsed time: " << sw.milliseconds() << " ms\n";
-
-        // check Tx
-        auto txHistory = senderWalletDB->getTxHistory();
-        WALLET_CHECK(txHistory.size() == 1);
-        WALLET_CHECK(txHistory[0].m_txId == txId);
-        WALLET_CHECK(txHistory[0].m_amount == 0);
-        WALLET_CHECK(txHistory[0].m_change == 38);
-        WALLET_CHECK(txHistory[0].m_fee == 2);
-        // asset related
-        cout << "Issue asset history " << txHistory[0].m_assetAmount << "\n";
-        cout << "Issue asset history " << txHistory[0].m_assetID << "\n";
-        cout << "Issue asset history " << (int)(txHistory[0].m_assetCommand) << "\n";
-        
-        WALLET_CHECK(txHistory[0].m_assetAmount == assetAmount);
-        WALLET_CHECK(txHistory[0].m_assetID == assetID);
-        WALLET_CHECK(txHistory[0].m_assetCommand == AssetCommand::Issue);
-
-        WALLET_CHECK(txHistory[0].m_status == TxStatus::Completed);
-
-        // check coins
-        vector<Coin> newSenderCoins;
-        senderWalletDB->visitCoins([&newSenderCoins](const Coin& c)->bool
+        beam::proto::Sk2Pk(assetID, skAsset);
+        LOG_INFO() << "skAsset: " << skAsset << " assetID: " << assetID;
         {
-            newSenderCoins.push_back(c);
-            return true;
-        });
+            sw.start();
 
-        WALLET_CHECK(newSenderCoins.size() == 3);
+            Amount assetAmount = 1000;
+            auto txId = sender.m_Wallet.handle_asset(sender.m_WalletID, sender.m_WalletID, AssetCommand::Issue, assetAmount, idx, 2, true, 200);
 
-        WALLET_CHECK(newSenderCoins[0].m_ID.m_Type == Key::Type::Coinbase);
-        WALLET_CHECK(newSenderCoins[0].m_status == Coin::Spent);
-        WALLET_CHECK(newSenderCoins[0].m_ID.m_Value == 40);
+            mainReactor->run();
+            sw.stop();
 
-        WALLET_CHECK(newSenderCoins[1].m_ID.m_Type == Key::Type::Change);
-        WALLET_CHECK(newSenderCoins[1].m_status == Coin::Available);
-        WALLET_CHECK(newSenderCoins[1].m_ID.m_Value == 38);
-        WALLET_CHECK(newSenderCoins[1].m_assetID == Zero);
+            cout << "Issue asset elapsed time: " << sw.milliseconds() << " ms\n";
 
-        WALLET_CHECK(newSenderCoins[2].m_ID.m_Type == Key::Type::Regular);
-        WALLET_CHECK(newSenderCoins[2].m_status == Coin::Available);
-        WALLET_CHECK(newSenderCoins[2].m_ID.m_Value == assetAmount);
-        WALLET_CHECK(newSenderCoins[2].m_assetID == assetID);
+            // check Tx
+            auto txHistory = senderWalletDB->getTxHistory();
+            WALLET_CHECK(txHistory.size() == 1);
+            WALLET_CHECK(txHistory[0].m_txId == txId);
+            WALLET_CHECK(txHistory[0].m_amount == 0);
+            WALLET_CHECK(txHistory[0].m_change == 38);
+            WALLET_CHECK(txHistory[0].m_fee == 2);
+            // asset related
+            cout << "Issue asset history " << txHistory[0].m_assetAmount << "\n";
+            cout << "Issue asset history " << txHistory[0].m_assetID << "\n";
+            cout << "Issue asset history " << (int)(txHistory[0].m_assetCommand) << "\n";
 
-        cout << "\nFinish of testing issuing asset to himself...\n";
+            WALLET_CHECK(txHistory[0].m_assetAmount == assetAmount);
+            WALLET_CHECK(txHistory[0].m_assetID == assetID);
+            WALLET_CHECK(txHistory[0].m_assetCommand == AssetCommand::Issue);
+
+            WALLET_CHECK(txHistory[0].m_status == TxStatus::Completed);
+
+            // check coins
+            vector<Coin> newSenderCoins;
+            senderWalletDB->visitCoins([&newSenderCoins](const Coin &c) -> bool {
+                newSenderCoins.push_back(c);
+                return true;
+            });
+
+            WALLET_CHECK(newSenderCoins.size() == 3);
+
+            WALLET_CHECK(newSenderCoins[0].m_ID.m_Type == Key::Type::Coinbase);
+            WALLET_CHECK(newSenderCoins[0].m_status == Coin::Spent);
+            WALLET_CHECK(newSenderCoins[0].m_ID.m_Value == 40);
+
+            WALLET_CHECK(newSenderCoins[1].m_ID.m_Type == Key::Type::Change);
+            WALLET_CHECK(newSenderCoins[1].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[1].m_ID.m_Value == 38);
+            WALLET_CHECK(newSenderCoins[1].m_assetID == Zero);
+
+            WALLET_CHECK(newSenderCoins[2].m_ID.m_Type == Key::Type::Regular);
+            WALLET_CHECK(newSenderCoins[2].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[2].m_ID.m_Value == assetAmount);
+            WALLET_CHECK(newSenderCoins[2].m_assetID == assetID);
+
+            cout << "\nFinish of testing issuing asset to himself...\n";
+        }
+
+        {
+            cout << "\nTesting transfer asset...\n";
+            sw.start();
+            Amount assetAmount = 300;
+            // FIXME: transfer to ourself?
+            auto txId = sender.m_Wallet.handle_asset(sender.m_WalletID, sender.m_WalletID, AssetCommand::Transfer, assetAmount, idx, 2, true, 200);
+            mainReactor->run();
+            sw.stop();
+
+            cout << "Transfer asset elapsed time: " << sw.milliseconds() << " ms\n";
+            // check Tx
+            auto txHistory = senderWalletDB->getTxHistory();
+            WALLET_CHECK(txHistory.size() == 2);
+            WALLET_CHECK(txHistory[0].m_txId == txId);
+            WALLET_CHECK(txHistory[0].m_amount == 0);
+            WALLET_CHECK(txHistory[0].m_change == 36);
+            WALLET_CHECK(txHistory[0].m_fee == 2);
+            // asset related
+            cout << "Transfer asset history " << txHistory[0].m_assetAmount << "\n";
+            cout << "Transfer asset history " << txHistory[0].m_assetID << "\n";
+            cout << "Transfer asset history " << (int)(txHistory[0].m_assetCommand) << "\n";
+
+            WALLET_CHECK(txHistory[0].m_assetAmount == assetAmount);
+            WALLET_CHECK(txHistory[0].m_assetID == assetID);
+            WALLET_CHECK(txHistory[0].m_assetCommand == AssetCommand::Transfer);
+
+            WALLET_CHECK(txHistory[0].m_status == TxStatus::Completed);
+
+            // check coins
+            vector<Coin> newSenderCoins;
+            senderWalletDB->visitCoins([&newSenderCoins](const Coin &c) -> bool {
+                newSenderCoins.push_back(c);
+                return true;
+            });
+
+            WALLET_CHECK(newSenderCoins.size() == (3+3));
+
+            WALLET_CHECK(newSenderCoins[0].m_ID.m_Type == Key::Type::Coinbase);
+            WALLET_CHECK(newSenderCoins[0].m_status == Coin::Spent);
+            WALLET_CHECK(newSenderCoins[0].m_ID.m_Value == 40);
+
+            WALLET_CHECK(newSenderCoins[1].m_ID.m_Type == Key::Type::Change);
+            WALLET_CHECK(newSenderCoins[1].m_status == Coin::Spent);
+            WALLET_CHECK(newSenderCoins[1].m_ID.m_Value == 38);
+            WALLET_CHECK(newSenderCoins[1].m_assetID == Zero);
+
+            WALLET_CHECK(newSenderCoins[2].m_ID.m_Type == Key::Type::Regular);
+            WALLET_CHECK(newSenderCoins[2].m_status == Coin::Spent);
+            WALLET_CHECK(newSenderCoins[2].m_ID.m_Value == 1000); //TODO
+            WALLET_CHECK(newSenderCoins[2].m_assetID == assetID);
+            // new coins
+            WALLET_CHECK(newSenderCoins[3].m_ID.m_Type == Key::Type::Change);
+            WALLET_CHECK(newSenderCoins[3].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[3].m_ID.m_Value == 36);
+            WALLET_CHECK(newSenderCoins[3].m_assetID == Zero);
+
+            WALLET_CHECK(newSenderCoins[4].m_ID.m_Type == Key::Type::Change);
+            WALLET_CHECK(newSenderCoins[4].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[4].m_ID.m_Value == 700);
+            WALLET_CHECK(newSenderCoins[4].m_assetID == assetID);
+
+            WALLET_CHECK(newSenderCoins[5].m_ID.m_Type == Key::Type::Regular);
+            WALLET_CHECK(newSenderCoins[5].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[5].m_ID.m_Value == 300); //TODO
+            WALLET_CHECK(newSenderCoins[5].m_assetID == assetID);
+        }
+
+        {
+            cout << "\nTesting burn asset...\n";
+            sw.start();
+            Amount assetAmount = 600;
+            auto txId = sender.m_Wallet.handle_asset(sender.m_WalletID, sender.m_WalletID, AssetCommand::Burn, assetAmount, idx, 2, true, 200);
+            mainReactor->run();
+            sw.stop();
+
+            cout << "Burn asset elapsed time: " << sw.milliseconds() << " ms\n";
+            // check Tx
+            auto txHistory = senderWalletDB->getTxHistory();
+            WALLET_CHECK(txHistory.size() == 3);
+            // TODO:
+            return;
+            
+            WALLET_CHECK(txHistory[0].m_txId == txId);
+            WALLET_CHECK(txHistory[0].m_amount == 0);
+            WALLET_CHECK(txHistory[0].m_change == 36);
+            WALLET_CHECK(txHistory[0].m_fee == 2);
+            // asset related
+            cout << "Burn asset history " << txHistory[0].m_assetAmount << "\n";
+            cout << "Burn asset history " << txHistory[0].m_assetID << "\n";
+            cout << "Burn asset history " << (int)(txHistory[0].m_assetCommand) << "\n";
+
+            WALLET_CHECK(txHistory[0].m_assetAmount == assetAmount);
+            WALLET_CHECK(txHistory[0].m_assetID == assetID);
+            WALLET_CHECK(txHistory[0].m_assetCommand == AssetCommand::Transfer);
+
+            WALLET_CHECK(txHistory[0].m_status == TxStatus::Completed);
+
+            // check coins
+            vector<Coin> newSenderCoins;
+            senderWalletDB->visitCoins([&newSenderCoins](const Coin &c) -> bool {
+                newSenderCoins.push_back(c);
+                return true;
+            });
+
+            WALLET_CHECK(newSenderCoins.size() == (3+3));
+
+            WALLET_CHECK(newSenderCoins[0].m_ID.m_Type == Key::Type::Coinbase);
+            WALLET_CHECK(newSenderCoins[0].m_status == Coin::Spent);
+            WALLET_CHECK(newSenderCoins[0].m_ID.m_Value == 40);
+
+            WALLET_CHECK(newSenderCoins[1].m_ID.m_Type == Key::Type::Change);
+            WALLET_CHECK(newSenderCoins[1].m_status == Coin::Spent);
+            WALLET_CHECK(newSenderCoins[1].m_ID.m_Value == 38);
+            WALLET_CHECK(newSenderCoins[1].m_assetID == Zero);
+
+            WALLET_CHECK(newSenderCoins[2].m_ID.m_Type == Key::Type::Regular);
+            WALLET_CHECK(newSenderCoins[2].m_status == Coin::Spent);
+            WALLET_CHECK(newSenderCoins[2].m_ID.m_Value == 1000); //TODO
+            WALLET_CHECK(newSenderCoins[2].m_assetID == assetID);
+            // new coins
+            WALLET_CHECK(newSenderCoins[3].m_ID.m_Type == Key::Type::Change);
+            WALLET_CHECK(newSenderCoins[3].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[3].m_ID.m_Value == 36);
+            WALLET_CHECK(newSenderCoins[3].m_assetID == Zero);
+
+            WALLET_CHECK(newSenderCoins[4].m_ID.m_Type == Key::Type::Change);
+            WALLET_CHECK(newSenderCoins[4].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[4].m_ID.m_Value == 700);
+            WALLET_CHECK(newSenderCoins[4].m_assetID == assetID);
+
+            WALLET_CHECK(newSenderCoins[5].m_ID.m_Type == Key::Type::Regular);
+            WALLET_CHECK(newSenderCoins[5].m_status == Coin::Available);
+            WALLET_CHECK(newSenderCoins[5].m_ID.m_Value == 300); //TODO
+            WALLET_CHECK(newSenderCoins[5].m_assetID == assetID);
+        }
+
     }
 }
 
@@ -1597,7 +1733,7 @@ int main()
     Rules::get().UpdateChecksum();
 
     // TestTxToHimself();
-    TestIssueAsset();
+    TestHandleAsset();
     // early quit
     return 0;
 

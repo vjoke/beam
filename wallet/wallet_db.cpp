@@ -2695,7 +2695,7 @@ namespace beam::wallet
         void Totals::Init(IWalletDB& walletDB)
         {
             ZeroObject(*this);
-
+            // TODO: add support for asset
             walletDB.visitCoins([this](const Coin& c)->bool
             {
                 const Amount& v = c.m_ID.m_Value; // alias

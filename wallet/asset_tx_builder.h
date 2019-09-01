@@ -73,5 +73,6 @@ namespace beam::wallet
         ECC::Scalar::Native m_IssuedBlindingFactor;
 
         void GetSK(ECC::Scalar::Native &sk) const;
+        void SelectAssetInputs();
     };
 }

@@ -68,7 +68,7 @@ void AssetTxBuilder::SelectInputs()
         break;
         case AssetCommand::Transfer:
         {
-
+            SelectAssetInputs();
         }
         break;
         case AssetCommand::Burn:
@@ -84,6 +84,44 @@ void AssetTxBuilder::SelectInputs()
         break;
 
     }
+}
+
+void AssetTxBuilder::SelectAssetInputs()
+{
+    vector<Coin> coins;
+    Amount assetAmount = GetAssetAmount();
+    CoinIDList preselectedCoinIDs;
+    Amount preselectedAmount = 0;
+
+    auto selectedCoins = m_Tx.GetWalletDB()->selectCoins(assetAmount, m_AssetID);
+    copy(selectedCoins.begin(), selectedCoins.end(), back_inserter(coins));
+
+    if (coins.empty())
+    {
+        // TODO: add support for asset
+        storage::Totals totals(*m_Tx.GetWalletDB());
+
+        LOG_ERROR() << m_Tx.GetTxID() << "[" << m_SubTxID << "]"
+                    << " You only have asset " << PrintableAmount(totals.Avail);
+        throw TransactionFailedException(!m_Tx.IsInitiator(), TxFailureReason::NoInputs);
+    }
+
+    // m_InputCoins.reserve(coins.size());
+
+    Amount total = 0;
+    for (auto &coin : coins)
+    {
+        coin.m_spentTxId = m_Tx.GetTxID();
+        total += coin.m_ID.m_Value;
+        m_InputCoins.push_back(Asset{coin.m_ID, coin.m_assetID});
+    }
+
+    m_AssetChange = total - assetAmount;
+
+    // m_Tx.SetParameter(TxParameterID::AssetChange, m_AssetChange, false, m_SubTxID);
+    m_Tx.SetParameter(TxParameterID::InputCoins, m_InputCoins, false, m_SubTxID);
+
+    m_Tx.GetWalletDB()->saveCoins(coins);
 }
 
 void AssetTxBuilder::AddChange()
@@ -196,6 +234,10 @@ ECC::Point::Native AssetTxBuilder::GetPublicExcess() const
     // PublicExcess = Sum(inputs) - Sum(outputs) - offset * G - (Sum(input amounts) - Sum(output amounts)) * H
     Point::Native publicAmount = Zero;
     Amount amount = 0;
+
+    Point::Native publicAssetAmount = Zero;
+    Amount assetAmount = 0;
+    SwitchCommitment sc(&m_AssetID);
     // TODO: what if user create new asset coin in general tranfer tx?
     for (const auto &cid : m_InputCoins)
     {
@@ -203,18 +245,34 @@ ECC::Point::Native AssetTxBuilder::GetPublicExcess() const
         {
             amount += cid.m_IDV.m_Value;
         }
+        else if (cid.m_AssetID == m_AssetID)
+        {
+            assetAmount += cid.m_IDV.m_Value; 
+        }
     }
     AmountBig::AddTo(publicAmount, amount);
+    // FIXME: why different?
+    Tag::AddValue(publicAssetAmount, &sc.m_hGen, assetAmount);
+
     amount = 0;
     publicAmount = -publicAmount;
+
+    assetAmount = 0;
+    publicAssetAmount = -publicAssetAmount;
     for (const auto &cid : m_OutputCoins)
     {
         if (cid.m_AssetID == Zero)
         {
             amount += cid.m_IDV.m_Value;
         }
+        else if (cid.m_AssetID == m_AssetID)
+        {
+            assetAmount += cid.m_IDV.m_Value;
+        } 
     }
     AmountBig::AddTo(publicAmount, amount);
+    // FIXME: why different?
+    Tag::AddValue(publicAssetAmount, &sc.m_hGen, assetAmount);
 
     Point::Native publicExcess = Context::get().G * m_Offset;
     {
@@ -223,7 +281,7 @@ ECC::Point::Native AssetTxBuilder::GetPublicExcess() const
         for (const auto &output : m_Outputs)
         {
             // TODO: filter out asset
-            if (output->m_AssetID == Zero) 
+            // if (output->m_AssetID == Zero) 
             {
                 if (commitment.Import(output->m_Commitment))
                 {
@@ -244,11 +302,15 @@ ECC::Point::Native AssetTxBuilder::GetPublicExcess() const
     }
     publicExcess += publicAmount;
 
+    publicExcess += publicAssetAmount;
+
     if (AssetCommand::Issue == m_AssetCommand)
     {
         Point::Native pt = Context::get().G * m_IssuedBlindingFactor;
         // FIXME:
         pt = -pt;
+        // reset
+        pt = Zero;
 
         Scalar::Native sk;
         GetSK(sk);
@@ -260,6 +322,9 @@ ECC::Point::Native AssetTxBuilder::GetPublicExcess() const
         LOG_INFO() << "Ray ==> AssetTxBuilder::GetPublicExcess pt2: " << pt2;
         LOG_INFO() << "Ray ==> AssetTxBuilder::GetPublicExcess blinding factor: " << m_IssuedBlindingFactor;
         publicExcess += pt;
+    }
+    else if (AssetCommand::Transfer == m_AssetCommand)
+    {
     }
 
     return publicExcess;

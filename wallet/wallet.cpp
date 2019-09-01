@@ -268,10 +268,9 @@ namespace beam::wallet
         return transfer_money(from, from, amountList, fee, {}, sender, lifetime, responseTime, move(message));
     }
 
-    TxID Wallet::issue_asset(const WalletID& from, Amount assetAmount, uint64_t idx, Amount fee /* = 0 */, bool sender /* = true */, Height lifetime /* = kDefaultTxLifetime */, Height responseTime /* = kDefaultTxResponseTime */, ByteBuffer&& message /* = {} */)
+    TxID Wallet::handle_asset(const WalletID& from, const WalletID& to, AssetCommand assetCommand, Amount assetAmount, uint64_t idx, Amount fee /* = 0 */, bool sender /* = true */, Height lifetime /* = kDefaultTxLifetime */, Height responseTime /* = kDefaultTxResponseTime */, ByteBuffer&& message /* = {} */)
     {
-        // sanity checking: we send to ourself to issue asset
-        auto receiverAddr = m_WalletDB->getAddress(from);
+        auto receiverAddr = m_WalletDB->getAddress(to);
 
         if (receiverAddr)
         {
@@ -281,7 +280,15 @@ namespace beam::wallet
                 throw AddressExpiredException();
             }
         }
-        
+        // else if (saveReceiver)
+        // {
+        //     WalletAddress address;
+        //     address.m_walletID = to;
+        //     address.m_createTime = getTimestamp();
+
+        //     m_WalletDB->saveAddress(address);
+        // }
+
         // TODO: use another type
         Key::ID kid = Key::ID(idx, Key::Type::Regular);
         // TODO: do not leak the sk by accident
@@ -291,7 +298,7 @@ namespace beam::wallet
         m_WalletDB->get_MasterKdf()->DeriveKey(sk, kid);
         beam::proto::Sk2Pk(assetID, sk);
         assert(assetID != Zero);
-        LOG_INFO() << "Created asset ID: " << assetID;
+        LOG_INFO() << "Asset ID: " << assetID;
 
         AmountList amountList = {};
         CoinIDList coins = {};
@@ -299,8 +306,6 @@ namespace beam::wallet
 
         TxID txID = GenerateTxID();
         auto tx = constructTransaction(txID, TxType::Simple);
-
-        auto assetCommand = AssetCommand::Issue;
 
         tx->SetParameter(TxParameterID::TransactionType, TxType::Simple, false);
         tx->SetParameter(TxParameterID::Lifetime, lifetime, false);
@@ -325,7 +330,7 @@ namespace beam::wallet
         txDescription.m_assetAmount = std::accumulate(assetAmountList.begin(), assetAmountList.end(), 0ULL);
         txDescription.m_assetID = assetID;
 
-        txDescription.m_peerId = from; // use same address
+        txDescription.m_peerId = (AssetCommand::Transfer == assetCommand) ? to : from;
         txDescription.m_myId = from;
         txDescription.m_message = move(message);
         txDescription.m_createTime = getTimestamp();
