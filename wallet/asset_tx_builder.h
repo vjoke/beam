@@ -45,6 +45,8 @@ namespace beam::wallet
         virtual void CreateKernel();
         virtual void SignPartial();
     protected:
+
+        ECC::Scalar::Native m_bug;
         // input
         AmountList m_AssetAmountList;
         AssetID m_AssetID;

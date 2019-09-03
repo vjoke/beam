@@ -1125,6 +1125,15 @@ namespace
         }
     }
 
+    void OutputTxHistory(const std::vector<TxDescription>& history)
+    {
+        for (const auto &item: history)
+        {
+           cout << "history created at " << item.m_createTime << "\n"; 
+           cout << "history asset id " << item.m_assetID << " amount " << item.m_assetAmount << " command " << (int)item.m_assetCommand << "\n"; 
+        }
+    }
+
     void TestHandleAsset()
     {
         cout << "\nTesting issuing Tx to himself...\n";
@@ -1171,15 +1180,12 @@ namespace
 
             // check Tx
             auto txHistory = senderWalletDB->getTxHistory();
+            // OutputTxHistory(txHistory);
             WALLET_CHECK(txHistory.size() == 1);
             WALLET_CHECK(txHistory[0].m_txId == txId);
             WALLET_CHECK(txHistory[0].m_amount == 0);
             WALLET_CHECK(txHistory[0].m_change == 38);
             WALLET_CHECK(txHistory[0].m_fee == 2);
-            // asset related
-            cout << "Issue asset history " << txHistory[0].m_assetAmount << "\n";
-            cout << "Issue asset history " << txHistory[0].m_assetID << "\n";
-            cout << "Issue asset history " << (int)(txHistory[0].m_assetCommand) << "\n";
 
             WALLET_CHECK(txHistory[0].m_assetAmount == assetAmount);
             WALLET_CHECK(txHistory[0].m_assetID == assetID);
@@ -1212,7 +1218,7 @@ namespace
 
             cout << "\nFinish of testing issuing asset to himself...\n";
         }
-
+        sleep(1); // deliberately sleep to let tx item get different creation time
         {
             cout << "\nTesting transfer asset...\n";
             sw.start();
@@ -1225,15 +1231,12 @@ namespace
             cout << "Transfer asset elapsed time: " << sw.milliseconds() << " ms\n";
             // check Tx
             auto txHistory = senderWalletDB->getTxHistory();
+            // OutputTxHistory(txHistory);
             WALLET_CHECK(txHistory.size() == 2);
             WALLET_CHECK(txHistory[0].m_txId == txId);
             WALLET_CHECK(txHistory[0].m_amount == 0);
             WALLET_CHECK(txHistory[0].m_change == 36);
             WALLET_CHECK(txHistory[0].m_fee == 2);
-            // asset related
-            cout << "Transfer asset history " << txHistory[0].m_assetAmount << "\n";
-            cout << "Transfer asset history " << txHistory[0].m_assetID << "\n";
-            cout << "Transfer asset history " << (int)(txHistory[0].m_assetCommand) << "\n";
 
             WALLET_CHECK(txHistory[0].m_assetAmount == assetAmount);
             WALLET_CHECK(txHistory[0].m_assetID == assetID);
@@ -1279,7 +1282,7 @@ namespace
             WALLET_CHECK(newSenderCoins[5].m_ID.m_Value == 300); //TODO
             WALLET_CHECK(newSenderCoins[5].m_assetID == assetID);
         }
-
+        sleep(1);
         {
             cout << "\nTesting burn asset...\n";
             sw.start();
@@ -1291,16 +1294,13 @@ namespace
             cout << "Burn asset elapsed time: " << sw.milliseconds() << " ms\n";
             // check Tx
             auto txHistory = senderWalletDB->getTxHistory();
+            // OutputTxHistory(txHistory);
             WALLET_CHECK(txHistory.size() == 3);
-            uint i = 1; 
+            uint i = 0; 
             WALLET_CHECK(txHistory[i].m_txId == txId);
             WALLET_CHECK(txHistory[i].m_amount == 0);
             WALLET_CHECK(txHistory[i].m_change == 34);
             WALLET_CHECK(txHistory[i].m_fee == 2);
-            // asset related
-            cout << "Burn asset history " << txHistory[i].m_assetAmount << "\n";
-            cout << "Burn asset history " << txHistory[i].m_assetID << "\n";
-            cout << "Burn asset history " << (int)(txHistory[i].m_assetCommand) << "\n";
 
             WALLET_CHECK(txHistory[i].m_assetAmount == assetAmount);
             WALLET_CHECK(txHistory[i].m_assetID == assetID);
@@ -1356,7 +1356,6 @@ namespace
             WALLET_CHECK(newSenderCoins[7].m_ID.m_Value == 100);
             WALLET_CHECK(newSenderCoins[7].m_assetID == assetID);
         }
-
     }
 }
 

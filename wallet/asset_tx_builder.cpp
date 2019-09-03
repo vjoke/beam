@@ -32,7 +32,7 @@ AssetTxBuilder::AssetTxBuilder(BaseTransaction &tx, SubTxID subTxID, Amount fee,
     {
         m_Tx.GetParameter(TxParameterID::AssetAmountList, m_AssetAmountList, m_SubTxID);
     }
-
+    m_bug.GenRandomNnz();
     m_AssetCommand = m_Tx.GetMandatoryParameter<AssetCommand>(TxParameterID::AssetCommand, m_SubTxID);
 }
 
@@ -312,6 +312,10 @@ Transaction::Ptr AssetTxBuilder::CreateTransaction()
 
 void AssetTxBuilder::GetSK(ECC::Scalar::Native &sk) const
 {
+    // sk = m_bug;
+    // LOG_INFO() << "bug: " << m_bug;
+    // return;
+
     auto idx = m_Tx.GetMandatoryParameter<uint64_t>(TxParameterID::AssetKIDIndex, m_SubTxID);
     auto kid = Key::ID(idx, Key::Type::Regular);
 
