@@ -199,7 +199,13 @@ namespace beam::wallet
         {
             auto& output = result.emplace_back(make_unique<Output>());
             output->m_AssetID = coinID.m_AssetID;
-            output->Create(schemeHeigh, secretKey, *GetChildKdf(coinID.m_IDV), coinID.m_IDV, *m_MasterKdf, coinID.m_Public);
+            bool bPublic = coinID.m_Public;
+            if (bPublic && !Rules().AllowPublicUtxos)
+            {
+                LOG_WARNING() << "Forced to be confidential because allowing public utxo is disabled";
+                bPublic = false;
+            }
+            output->Create(schemeHeigh, secretKey, *GetChildKdf(coinID.m_IDV), coinID.m_IDV, *m_MasterKdf, bPublic);
         }
         return result;
     }
