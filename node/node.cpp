@@ -1055,6 +1055,12 @@ void Node::Initialize(IExternalPOW* externalPOW)
 	m_Bbs.m_HighestPosted_s = m_Processor.get_DB().get_BbsMaxTime();
 
 	m_Processor.OnHorizonChanged(); // invoke it once again, after the Compressor initialized and maybe deleted some of backlog, perhaps fossil height may go up
+    // FIXME: we turn on this flag for testing only
+    if (Rules::get().FakePoW)
+    {
+        m_PostStartSynced = true;
+        LOG_WARNING() << "Ray ==> turn on this flag to allow spreading transactions under FakePoW mode";
+    }
 }
 
 uint32_t Node::get_AcessiblePeerCount() const

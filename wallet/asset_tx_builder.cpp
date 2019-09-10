@@ -32,8 +32,12 @@ AssetTxBuilder::AssetTxBuilder(BaseTransaction &tx, SubTxID subTxID, Amount fee,
     {
         m_Tx.GetParameter(TxParameterID::AssetAmountList, m_AssetAmountList, m_SubTxID);
     }
-    m_bug.GenRandomNnz();
-    m_AssetCommand = m_Tx.GetMandatoryParameter<AssetCommand>(TxParameterID::AssetCommand, m_SubTxID);
+    if (!m_Tx.GetParameter(TxParameterID::AssetCommand, m_AssetCommand, m_SubTxID))
+    {
+        LOG_WARNING() << "AssetTxBuilder defaults to Transfer";
+        m_AssetCommand = AssetCommand::Transfer;
+    }
+
 }
 
 
@@ -97,7 +101,7 @@ void AssetTxBuilder::SelectAssetInputs()
     if (coins.empty())
     {
         // TODO: add support for asset
-        storage::Totals totals(*m_Tx.GetWalletDB());
+        storage::Totals totals(*m_Tx.GetWalletDB(), m_AssetID);
 
         LOG_ERROR() << m_Tx.GetTxID() << "[" << m_SubTxID << "]"
                     << " You only have asset " << PrintableAmount(totals.Avail);
@@ -109,7 +113,7 @@ void AssetTxBuilder::SelectAssetInputs()
     {
         coin.m_spentTxId = m_Tx.GetTxID();
         total += coin.m_ID.m_Value;
-        m_InputCoins.push_back(Asset{coin.m_ID, coin.m_assetID});
+        m_InputCoins.push_back(Asset{coin.m_ID, coin.m_assetID, false});
     }
 
     m_AssetChange = total - assetAmount;
@@ -140,7 +144,7 @@ void AssetTxBuilder::GenerateNewCoin(Amount amount, bool bChange)
         newUtxo.m_ID.m_Type = Key::Type::Change;
     }
     m_Tx.GetWalletDB()->storeCoin(newUtxo);
-    m_OutputCoins.push_back(Asset{ newUtxo.m_ID, newUtxo.m_assetID });
+    m_OutputCoins.push_back(Asset{ newUtxo.m_ID, newUtxo.m_assetID, !bChange });
     // FIXME: 
     m_Tx.SetParameter(TxParameterID::OutputCoins, m_OutputCoins, false, m_SubTxID);
     for (const auto &coin : m_OutputCoins)
@@ -261,9 +265,10 @@ ECC::Point::Native AssetTxBuilder::GetPublicExcess() const
 
     if (AssetCommand::Issue == m_AssetCommand || AssetCommand::Burn == m_AssetCommand)
     {
-        Scalar::Native sk;
+        NoLeak<Scalar::Native> sk;
         GetSK(sk);
-        Point::Native pt = Context::get().G * sk;
+        Point::Native pt = Context::get().G * sk.V;
+
         pt = -pt;
 
         publicExcess += pt;
@@ -310,19 +315,15 @@ Transaction::Ptr AssetTxBuilder::CreateTransaction()
     return transaction;
 }
 
-void AssetTxBuilder::GetSK(ECC::Scalar::Native &sk) const
+void AssetTxBuilder::GetSK(NoLeak<ECC::Scalar::Native> &sk) const
 {
-    // sk = m_bug;
-    // LOG_INFO() << "bug: " << m_bug;
-    // return;
-
     auto idx = m_Tx.GetMandatoryParameter<uint64_t>(TxParameterID::AssetKIDIndex, m_SubTxID);
     auto kid = Key::ID(idx, Key::Type::Regular);
 
     LOG_INFO() << "kid: " << kid.m_Idx;
-    // FIXME: is the same kdf?
-    m_Tx.GetWalletDB()->get_MasterKdf()->DeriveKey(sk, kid);
+    m_Tx.GetWalletDB()->get_MasterKdf()->DeriveKey(sk.V, kid);
 }
+
 
 void AssetTxBuilder::CreateKernel()
 {
@@ -333,10 +334,10 @@ void AssetTxBuilder::CreateKernel()
         m_EmissionKernel->m_AssetEmission = (AssetCommand::Issue == m_AssetCommand) ? assetAmount : -assetAmount; // if amount is negative, will burn token
         m_EmissionKernel->m_Commitment.m_X = m_AssetID;
         m_EmissionKernel->m_Commitment.m_Y = 0;
-        // TODO: avoid leak
-        Scalar::Native sk;
+        
+        NoLeak<Scalar::Native> sk;
         GetSK(sk);
-        m_EmissionKernel->Sign(sk);
+        m_EmissionKernel->Sign(sk.V);
 
         LOG_INFO() << "Created emission kernel with amount " << assetAmount << " for asset id " << m_AssetID;
     }
@@ -355,9 +356,9 @@ void AssetTxBuilder::SignPartial()
     auto offset = m_Offset; 
     if (AssetCommand::Issue == m_AssetCommand || AssetCommand::Burn == m_AssetCommand) 
     {
-        Scalar::Native sk;
+        NoLeak<Scalar::Native> sk;
         GetSK(sk);
-        offset += sk;
+        offset += sk.V;
     }
     m_PartialSignature = m_Tx.GetKeyKeeper()->SignSync(m_InputCoins, m_OutputCoins, offset, m_NonceSlot, m_Message, GetPublicNonce() + m_PeerPublicNonce, totalPublicExcess);
 

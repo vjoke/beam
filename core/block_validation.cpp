@@ -106,7 +106,6 @@ namespace beam
 		r.Reset();
 
 		ECC::Point::Native pt;
-
 		for (const Input* pPrev = NULL; r.m_pUtxoIn; pPrev = r.m_pUtxoIn, r.NextUtxoIn())
 		{
 			if (ShouldAbort())
@@ -185,7 +184,7 @@ namespace beam
 				}
 			}
 		}
-
+		
 		for (const TxKernel* pPrev = NULL; r.m_pKernel; pPrev = r.m_pKernel, r.NextKernel())
 		{
 			if (ShouldAbort())

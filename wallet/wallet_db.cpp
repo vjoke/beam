@@ -1692,7 +1692,29 @@ namespace beam::wallet
         return true;
     }
 
-    void WalletDB::visitCoins(function<bool(const Coin& coin)> func)
+    void WalletDB::visitCoins(function<bool(const Coin& coin)> func, const AssetID assetID/* = beam::Zero*/)
+    {
+        const char* req = "SELECT " STORAGE_FIELDS " FROM " STORAGE_NAME " WHERE assetID=?1 ORDER BY ROWID;";
+        sqlite::Statement stm(this, req);
+        stm.bind(1, assetID);
+
+        Height h = getCurrentHeight();
+
+        while (stm.step())
+        {
+            Coin coin;
+
+            int colIdx = 0;
+            ENUM_ALL_STORAGE_FIELDS(STM_GET_LIST, NOSEP, coin);
+
+            storage::DeduceStatus(*this, coin, h);
+
+            if (!func(coin))
+                break;
+        }
+    }
+
+    void WalletDB::visitAllCoins(function<bool(const Coin& coin)> func)
     {
         const char* req = "SELECT " STORAGE_FIELDS " FROM " STORAGE_NAME " ORDER BY ROWID;";
         sqlite::Statement stm(this, req);
@@ -2692,7 +2714,7 @@ namespace beam::wallet
             return true;
         }
 
-        void Totals::Init(IWalletDB& walletDB)
+        void Totals::Init(IWalletDB& walletDB, const AssetID assetID/* = beam::Zero*/)
         {
             ZeroObject(*this);
             // TODO: add support for asset
@@ -2737,7 +2759,7 @@ namespace beam::wallet
                 }
 
                 return true;
-            });
+            }, assetID);
         }
 
         WalletAddress createAddress(IWalletDB& walletDB)

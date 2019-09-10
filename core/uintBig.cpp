@@ -24,7 +24,9 @@ namespace beam {
 
 	void uintBigImpl::_Print(const uint8_t* pDst, uint32_t nDst, std::ostream& s)
 	{
-		const uint32_t nDigitsMax = 8;
+		// FIXME: be same with ECC::nBytes
+		const uint32_t nDigitsMax = 32;
+
 		if (nDst > nDigitsMax)
 			nDst = nDigitsMax; // truncate
 

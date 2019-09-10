@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "fly_client.h"
+#include "../utility/logger.h"
 
 namespace beam {
 namespace proto {
@@ -749,7 +750,12 @@ void FlyClient::NetworkStd::Connection::OnRequestData(RequestUtxoEvents& req)
 
 bool FlyClient::NetworkStd::Connection::IsSupported(RequestTransaction& req)
 {
-    return (LoginFlags::SpreadingTransactions & m_LoginFlags) && IsAtTip();
+    bool ret = (LoginFlags::SpreadingTransactions & m_LoginFlags) && IsAtTip();
+    if (!ret)
+    {
+        LOG_WARNING() << "NewTransaction request is NOT ready (" << (int)m_LoginFlags << ", " << IsAtTip() << ")\n";
+    }
+    return ret;
 }
 
 void FlyClient::NetworkStd::Connection::OnRequestData(RequestTransaction& req)

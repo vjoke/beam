@@ -44,9 +44,8 @@ namespace beam::wallet
         virtual Transaction::Ptr CreateTransaction();
         virtual void CreateKernel();
         virtual void SignPartial();
+        
     protected:
-
-        ECC::Scalar::Native m_bug;
         // input
         AmountList m_AssetAmountList;
         AssetID m_AssetID;
@@ -57,7 +56,7 @@ namespace beam::wallet
         TxKernel::Ptr m_EmissionKernel;
         mutable boost::optional<Merkle::Hash> m_AssetKernelID;
 
-        void GetSK(ECC::Scalar::Native &sk) const;
+        void GetSK(ECC::NoLeak<ECC::Scalar::Native> &sk) const;
         void SelectAssetInputs();
     };
 }

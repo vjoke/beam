@@ -268,7 +268,7 @@ namespace beam::wallet
         return transfer_money(from, from, amountList, fee, {}, sender, lifetime, responseTime, move(message));
     }
 
-    TxID Wallet::handle_asset(const WalletID& from, const WalletID& to, AssetCommand assetCommand, Amount assetAmount, uint64_t idx, Amount fee /* = 0 */, bool sender /* = true */, Height lifetime /* = kDefaultTxLifetime */, Height responseTime /* = kDefaultTxResponseTime */, ByteBuffer&& message /* = {} */)
+    TxID Wallet::handle_asset(const WalletID& from, const WalletID& to, AssetCommand assetCommand, Amount assetAmount, uint64_t idx, AssetID assetID, Amount fee /* = 0 */, bool sender /* = true */, Height lifetime /* = kDefaultTxLifetime */, Height responseTime /* = kDefaultTxResponseTime */, ByteBuffer&& message /* = {} */)
     {
         auto receiverAddr = m_WalletDB->getAddress(to);
 
@@ -293,13 +293,23 @@ namespace beam::wallet
         Key::ID kid = Key::ID(idx, Key::Type::Regular);
         // TODO: do not leak the sk by accident
         // TODO: check if duplicate 
-        Scalar::Native sk;
-        AssetID assetID = Zero;
-        m_WalletDB->get_MasterKdf()->DeriveKey(sk, kid);
-        beam::proto::Sk2Pk(assetID, sk);
-        assert(assetID != Zero);
-        LOG_INFO() << "Asset ID: " << assetID;
-
+        bool isTransfer = assetCommand == AssetCommand::Transfer ? true : false;
+        if (!isTransfer)
+        {
+            Scalar::Native sk;
+            m_WalletDB->get_MasterKdf()->DeriveKey(sk, kid);
+            AssetID aid = Zero;
+            beam::proto::Sk2Pk(aid, sk);
+            assert(aid != Zero);
+            // if (aid != assetID)
+            // {
+            //     LOG_INFO() << "Invalid asset";
+            //     throw InvalidAssetException(); 
+            // }
+            assetID = aid;
+            LOG_INFO() << "Asset ID: " << assetID;
+        }
+        
         AmountList amountList = {};
         CoinIDList coins = {};
         auto assetAmountList = AmountList{ assetAmount };
@@ -318,7 +328,10 @@ namespace beam::wallet
         tx->SetParameter(TxParameterID::AssetID, assetID, false);
         tx->SetParameter(TxParameterID::AssetAmountList, assetAmountList, false);
 
-        tx->SetParameter(TxParameterID::AssetKIDIndex, idx, false);
+        if (!isTransfer)
+        {
+            tx->SetParameter(TxParameterID::AssetKIDIndex, idx, false);
+        }
 
         TxDescription txDescription;
 
@@ -341,6 +354,7 @@ namespace beam::wallet
 
         ProcessTransaction(tx);
         return txID;
+
     }
 
     TxID Wallet::swap_coins(const WalletID& from, const WalletID& to, Amount amount, Amount fee, AtomicSwapCoin swapCoin,

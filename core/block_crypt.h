@@ -36,6 +36,7 @@ namespace beam
     {
         Key::IDV m_IDV;
         AssetID m_AssetID;
+		bool m_Public;
     };
 
 	namespace MasterKey

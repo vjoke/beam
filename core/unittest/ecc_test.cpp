@@ -17,6 +17,7 @@
 #include "../block_rw.h"
 #include "../treasury.h"
 #include "../../utility/serialize.h"
+#include "../../utility/string_helpers.h"
 #include "../serialization_adapters.h"
 #include "../aes.h"
 #include "../proto.h"
@@ -1516,8 +1517,8 @@ void TestCACirculation(bool emit)
 void TestCA()
 {
 	// TestCATransfer();
-	TestCACirculation(true);
-	// TestCACirculation(false);
+	// TestCACirculation(true);
+	TestCACirculation(false);
 }
 
 struct IHWWallet
@@ -2266,8 +2267,52 @@ void TestTreasury()
 	}
 }
 
+bool FromHex(beam::AssetID& assetID, const std::string& s)
+{
+	std::cout << "Try to parse asset ID from " << s << "\n";
+	typedef std::vector<uint8_t> ByteBuffer;
+	bool bValid = false;
+	ByteBuffer bb = beam::from_hex(s, &bValid);
+	if (!bValid)
+	{
+		std::cout << "Invalid hex string";
+		return false;
+	}
+	if (bb.size() != sizeof(assetID))
+	{
+		std::cout << "Invalid size";
+		return false;
+	}
+	typedef beam::uintBig_t<sizeof(assetID)> BigSelf;
+	static_assert(sizeof(BigSelf) == sizeof(assetID), "");
+
+	*reinterpret_cast<BigSelf *>(&assetID) = beam::Blob(bb);
+
+	std::cout << "Result asset id: " << assetID << "\n";
+	return true;
+}
+
+void TestAssetIDConversion()
+{
+	Scalar::Native skAsset;
+	beam::AssetID aid;
+
+	SetRandom(skAsset);
+	beam::proto::Sk2Pk(aid, skAsset);
+	std::cout << aid << "\n";
+
+	std::ostringstream oss;
+	oss << aid;
+	std::string s = oss.str();
+
+	beam::AssetID tempAID = Zero;
+	verify_test(true == FromHex(tempAID, s));
+	verify_test(aid == tempAID);
+}
+
 void TestAll()
 {
+	TestAssetIDConversion();
 	TestUintBig();
 	TestHash();
 	TestScalars();

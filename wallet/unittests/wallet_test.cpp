@@ -1171,7 +1171,7 @@ namespace
             sw.start();
 
             Amount assetAmount = 1000;
-            auto txId = sender.m_Wallet.handle_asset(sender.m_WalletID, sender.m_WalletID, AssetCommand::Issue, assetAmount, idx, 2, true, 200);
+            auto txId = sender.m_Wallet.handle_asset(sender.m_WalletID, sender.m_WalletID, AssetCommand::Issue, assetAmount, idx, assetID, 2, true, 200);
 
             mainReactor->run();
             sw.stop();
@@ -1195,7 +1195,7 @@ namespace
 
             // check coins
             vector<Coin> newSenderCoins;
-            senderWalletDB->visitCoins([&newSenderCoins](const Coin &c) -> bool {
+            senderWalletDB->visitAllCoins([&newSenderCoins](const Coin &c) -> bool {
                 newSenderCoins.push_back(c);
                 return true;
             });
@@ -1224,7 +1224,7 @@ namespace
             sw.start();
             Amount assetAmount = 300;
             // FIXME: transfer to ourself?
-            auto txId = sender.m_Wallet.handle_asset(sender.m_WalletID, sender.m_WalletID, AssetCommand::Transfer, assetAmount, idx, 2, true, 200);
+            auto txId = sender.m_Wallet.handle_asset(sender.m_WalletID, sender.m_WalletID, AssetCommand::Transfer, assetAmount, idx, assetID, 2, true, 200);
             mainReactor->run();
             sw.stop();
 
@@ -1246,7 +1246,7 @@ namespace
 
             // check coins
             vector<Coin> newSenderCoins;
-            senderWalletDB->visitCoins([&newSenderCoins](const Coin &c) -> bool {
+            senderWalletDB->visitAllCoins([&newSenderCoins](const Coin &c) -> bool {
                 newSenderCoins.push_back(c);
                 return true;
             });
@@ -1287,7 +1287,7 @@ namespace
             cout << "\nTesting burn asset...\n";
             sw.start();
             Amount assetAmount = 600;
-            auto txId = sender.m_Wallet.handle_asset(sender.m_WalletID, sender.m_WalletID, AssetCommand::Burn, assetAmount, idx, 2, true, 200);
+            auto txId = sender.m_Wallet.handle_asset(sender.m_WalletID, sender.m_WalletID, AssetCommand::Burn, assetAmount, idx, assetID, 2, true, 200);
             mainReactor->run();
             sw.stop();
 
@@ -1310,7 +1310,7 @@ namespace
 
             // check coins
             vector<Coin> newSenderCoins;
-            senderWalletDB->visitCoins([&newSenderCoins](const Coin &c) -> bool {
+            senderWalletDB->visitAllCoins([&newSenderCoins](const Coin &c) -> bool {
                 newSenderCoins.push_back(c);
                 return true;
             });
@@ -1738,6 +1738,7 @@ int main()
     Rules::get().FakePoW = true;
 	Rules::get().pForks[1].m_Height = 100500; // needed for lightning network to work
     Rules::get().UpdateChecksum();
+    Rules::get().AllowPublicUtxos = true; // for asset emission
 
     // TestTxToHimself();
     TestHandleAsset();

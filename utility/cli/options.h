@@ -128,6 +128,11 @@ namespace beam
         extern const char* SWAP_BEAM_SIDE;
         extern const char* SWAP_TX_HISTORY;
         extern const char* NODE_POLL_PERIOD;
+        // asset related
+        extern const char* ASSET_COMMAND;
+        extern const char* ASSET_KIDINDEX;
+        extern const char* ASSET_ID;
+
         // values
         extern const char* EXPIRATION_TIME_24H;
         extern const char* EXPIRATION_TIME_NEVER;

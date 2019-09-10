@@ -129,6 +129,12 @@ namespace beam
         const char* SWAP_BEAM_SIDE = "swap_beam_side";
         const char* SWAP_TX_HISTORY = "swap_tx_history";
         const char* NODE_POLL_PERIOD = "node_poll_period";
+
+        // Asset related
+        const char* ASSET_COMMAND = "asset_command";
+        const char* ASSET_KIDINDEX = "asset_kidindex";
+        const char* ASSET_ID = "asset_id";
+        
         // values
         const char* EXPIRATION_TIME_24H = "24h";
         const char* EXPIRATION_TIME_NEVER = "never";
@@ -237,6 +243,11 @@ namespace beam
             (cli::IMPORT_EXPORT_PATH, po::value<string>()->default_value("export.dat"), "path to import or export data (import_data|export_data)")
             (cli::COLD_WALLET, "used to init cold wallet")
             (cli::COMMAND, po::value<string>(), "command to execute [new_addr|send|listen|init|restore|info|export_miner_key|export_owner_key|generate_phrase|change_address_expiration|address_list|rescan|export_data|import_data|tx_details|payment_proof_export|payment_proof_verify|utxo|cancel_tx|delete_tx|swap_init|swap_listen]")
+            
+            (cli::ASSET_COMMAND, po::value<uint32_t>(), "asset command 1=issue, 2=transfer, 3=burn")
+            (cli::ASSET_KIDINDEX, po::value<uint64_t>(), "asset key index, only necessary for issue or burn commands")
+            (cli::ASSET_ID, po::value<string>(), "asset id")
+
             (cli::NODE_POLL_PERIOD, po::value<Nonnegative<uint32_t>>()->default_value(Nonnegative<uint32_t>(0)), "Node poll period in milliseconds. Set to 0 to keep connection. Anyway poll period would be no less than the expected rate of blocks if it is less then it will be rounded up to block rate value.");
 
         po::options_description wallet_treasury_options("Wallet treasury options");

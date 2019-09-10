@@ -613,14 +613,59 @@ namespace
         return 0;
     }
 
+    // FIXME: refer to WalletID::FromHex
+    bool FromHex(AssetID& assetID, const std::string& s)
+    {
+        bool bValid = true;
+        LOG_INFO() << "Try to parse asset id from string " << s;
+        ByteBuffer bb = from_hex(s, &bValid);
+        if (!bValid)
+        {
+            LOG_ERROR() << "Invalid hex string";
+            return false;
+        }
+        if (bb.size() != sizeof(assetID))
+        {
+            LOG_ERROR() << "Invalid size";
+            return false;
+        }
+
+        typedef uintBig_t<sizeof(assetID)> BigSelf;
+        static_assert(sizeof(BigSelf) == sizeof(assetID), "");
+
+        *reinterpret_cast<BigSelf*>(&assetID) = Blob(bb);
+
+        Point::Native p;
+        if (!proto::ImportPeerID(p, assetID)) // type of assetID is same with peerID
+        {
+            LOG_ERROR() << "Invalid point";
+            return false;
+        }
+
+        LOG_INFO() << "Got asset id " << assetID;
+        return true;
+    }
+
     int ShowWalletInfo(const IWalletDB::Ptr& walletDB, const po::variables_map& vm)
     {
         Block::SystemState::ID stateID = {};
         walletDB->getSystemStateID(stateID);
+        AssetID assetID = Zero;
 
-        storage::Totals totals(*walletDB);
+        if (vm.count(cli::ASSET_ID))
+        {
+            if (!FromHex(assetID, vm[cli::ASSET_ID].as<string>()))
+            {
+                cout << "Failed to parse assetID\n";
+                return -1; 
+            }
+        }
+
+        storage::Totals totals(*walletDB, assetID);
+
 
         cout << "____Wallet summary____\n\n"
+            << "AssetID .................." << assetID << "\n\n"
             << "Current height............" << stateID.m_Height << '\n'
             << "Current state ID.........." << stateID.m_Hash << "\n\n"
             << "Available................." << PrintableAmount(totals.Avail) << '\n'
@@ -709,6 +754,8 @@ namespace
         }
 
         const array<uint8_t, 6> columnWidths{ { 49, 14, 14, 18, 30, 8} };
+        cout << "AssetID .................." << assetID << "\n";
+
         cout << "  |"
             << left << setw(columnWidths[0]) << " ID" << " |"
             << right << setw(columnWidths[1]) << " beam" << " |"
@@ -728,7 +775,7 @@ namespace
                 << " " << setw(columnWidths[4]+1) << c.m_status
                 << " " << setw(columnWidths[5]+1) << c.m_ID.m_Type << endl;
             return true;
-        });
+        }, assetID);
         return 0;
     }
 
@@ -926,6 +973,43 @@ namespace
             }
         }
         return coinIDs;
+    }
+
+    bool LoadAssetParamsForTX(const po::variables_map& vm, AssetCommand& assetCommand, uint64_t& idx, AssetID& assetID)
+    {
+        if (vm.count(cli::ASSET_COMMAND) == 0)
+        {
+            return false;
+        }
+        if (vm.count(cli::ASSET_KIDINDEX) == 0 && vm.count(cli::ASSET_ID) == 0)
+        {
+            LOG_ERROR() << "Missing required asset parameters";
+            return false;
+        }
+
+        switch (vm[cli::ASSET_COMMAND].as<uint32_t>())
+        {
+            case 1: assetCommand = AssetCommand::Issue; break;
+            case 2: assetCommand = AssetCommand::Transfer; break;
+            case 3: assetCommand = AssetCommand::Burn; break;
+            default: LOG_ERROR() << "Invalid asset command, should be [1,3]"; return false;
+        }
+
+        if (assetCommand == AssetCommand::Transfer)
+        {
+            if (!FromHex(assetID, vm[cli::ASSET_ID].as<string>()))
+            {
+                LOG_ERROR() << "Invalid asset id";
+                return false;
+            }
+        }
+        else
+        {
+            idx = vm[cli::ASSET_KIDINDEX].as<uint64_t>();
+        }
+        // TODO: more error checking
+        LOG_INFO() << "Asset params: (" << (int)assetCommand << ", " << idx << ", " << assetID << ")";
+        return true;
     }
 
     bool LoadBaseParamsForTX(const po::variables_map& vm, Amount& amount, Amount& fee, WalletID& receiverWalletID, bool checkFee)
@@ -1643,8 +1727,19 @@ int main_impl(int argc, char* argv[])
                         if (isTxInitiator)
                         {
                             WalletAddress senderAddress = GenerateNewAddress(walletDB, "");
-                            CoinIDList coinIDs = GetPreselectedCoinIDs(vm);
-                            currentTxID = wallet.transfer_money(senderAddress.m_walletID, receiverWalletID, move(amount), move(fee), coinIDs, command == cli::SEND, kDefaultTxLifetime, kDefaultTxResponseTime, {}, true);
+                            AssetCommand assetCommand;
+                            uint64_t idx = 0;
+                            AssetID assetID = Zero;
+
+                            if (LoadAssetParamsForTX(vm, assetCommand, idx, assetID))
+                            {
+                                currentTxID = wallet.handle_asset(senderAddress.m_walletID, receiverWalletID, assetCommand, move(amount), idx, assetID, move(fee), command == cli::SEND, kDefaultTxLifetime, kDefaultTxResponseTime, {});
+                            }
+                            else
+                            {
+                                CoinIDList coinIDs = GetPreselectedCoinIDs(vm);
+                                currentTxID = wallet.transfer_money(senderAddress.m_walletID, receiverWalletID, move(amount), move(fee), coinIDs, command == cli::SEND, kDefaultTxLifetime, kDefaultTxResponseTime, {}, true);
+                            }
                         }
 
                         bool deleteTx = command == cli::DELETE_TX;

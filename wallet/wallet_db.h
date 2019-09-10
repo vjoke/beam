@@ -229,7 +229,8 @@ struct IWalletDB
     virtual void clearCoins() = 0;
 
     // Generic visitor to iterate over coin collection
-    virtual void visitCoins(std::function<bool(const Coin &coin)> func) = 0;
+    virtual void visitCoins(std::function<bool(const Coin& coin)> func, AssetID aid = Zero) = 0;
+    virtual void visitAllCoins(std::function<bool(const Coin& coin)> func) {}
 
     // Used in split API for session management
     virtual bool lockCoins(const CoinIDList &list, uint64_t session) = 0;
@@ -330,7 +331,9 @@ public:
     bool findCoin(Coin &coin) override;
     void clearCoins() override;
 
-    void visitCoins(std::function<bool(const Coin &coin)> func) override;
+    void visitCoins(std::function<bool(const Coin& coin)> func, AssetID aid = Zero) override;
+    void visitAllCoins(std::function<bool(const Coin& coin)> func) override;
+
 
     void setVarRaw(const char *name, const void *data, size_t size) override;
     bool getVarRaw(const char *name, void *data, int size) const override;
@@ -530,8 +533,9 @@ struct Totals
     Amount Unspent = 0;
 
     Totals() {}
-    Totals(IWalletDB &db) { Init(db); }
-    void Init(IWalletDB &);
+    Totals(IWalletDB& db, const AssetID assetID = beam::Zero) { Init(db, assetID); }
+    void Init(IWalletDB&, const AssetID assetID = beam::Zero);
+
 };
 
 // Used for Payment Proof feature
