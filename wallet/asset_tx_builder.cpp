@@ -144,7 +144,13 @@ void AssetTxBuilder::GenerateNewCoin(Amount amount, bool bChange)
         newUtxo.m_ID.m_Type = Key::Type::Change;
     }
     m_Tx.GetWalletDB()->storeCoin(newUtxo);
-    m_OutputCoins.push_back(Asset{ newUtxo.m_ID, newUtxo.m_assetID, !bChange });
+    
+    bool bPublic = false;
+    if (AssetCommand::Transfer != m_AssetCommand)
+    {
+        bPublic = true;
+    }
+    m_OutputCoins.push_back(Asset{ newUtxo.m_ID, newUtxo.m_assetID, bPublic });
     // FIXME: 
     m_Tx.SetParameter(TxParameterID::OutputCoins, m_OutputCoins, false, m_SubTxID);
     for (const auto &coin : m_OutputCoins)
