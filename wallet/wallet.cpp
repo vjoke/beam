@@ -914,17 +914,17 @@ namespace beam::wallet
     {
         std::vector<proto::UtxoEvent>& v = r.m_Res.m_Events;
 
-        function<Point(const Key::IDV&)> commitmentFunc;
+        function<Point(const Key::IDV&, const AssetID* pAssetID)> commitmentFunc;
         if (m_KeyKeeper)
         {
-            commitmentFunc = [this](const auto& kidv) {return m_KeyKeeper->GeneratePublicKeySync(kidv, true); };
+            commitmentFunc = [this](const auto& kidv, const AssetID* pAssetID) {return m_KeyKeeper->GeneratePublicKeySync(kidv, true, pAssetID); };
         }
         else if (auto ownerKdf = m_WalletDB->get_OwnerKdf(); ownerKdf)
         {
-            commitmentFunc = [ownerKdf](const auto& kidv)
+            commitmentFunc = [ownerKdf](const auto& kidv, const AssetID* pAssetID)
             {
                 Point::Native pt;
-                SwitchCommitment sw;
+                SwitchCommitment sw(pAssetID); // FIXME:
 
                 sw.Recover(pt, *ownerKdf, kidv);
                 Point commitment = pt;
@@ -939,7 +939,7 @@ namespace beam::wallet
 			// filter-out false positives
             if (commitmentFunc)
             {
-                Point commitment = commitmentFunc(event.m_Kidv);
+                Point commitment = commitmentFunc(event.m_Kidv, &event.m_AssetID);
 			    if (commitment == event.m_Commitment)
 				    ProcessUtxoEvent(event);
 				else
@@ -949,7 +949,7 @@ namespace beam::wallet
 					{
 						event.m_Kidv.set_WorkaroundBb21();
 
-						commitment = commitmentFunc(event.m_Kidv);
+						commitment = commitmentFunc(event.m_Kidv, &event.m_AssetID);
 						if (commitment == event.m_Commitment)
 							ProcessUtxoEvent(event);
 					}
