@@ -993,11 +993,12 @@ namespace beam::wallet
     {
         Coin c;
         c.m_ID = evt.m_Kidv;
+        c.m_assetID = evt.m_AssetID;
 
         bool bExists = m_WalletDB->findCoin(c);
 		c.m_maturity = evt.m_Maturity;
 
-        LOG_INFO() << "CoinID: " << evt.m_Kidv << " Maturity=" << evt.m_Maturity << (evt.m_Added ? " Confirmed" : " Spent");
+        LOG_INFO() << "CoinID: " << evt.m_Kidv << " AssetID=" << evt.m_AssetID << " Maturity=" << evt.m_Maturity << (evt.m_Added ? " Confirmed" : " Spent");
 
         if (evt.m_Added)
         {
